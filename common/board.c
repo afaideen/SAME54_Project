@@ -25,7 +25,8 @@ void BOARD_Init(void) {
 
 	// LED0: PC18 output, init off (active low)
 	TRISCbits.DIRSET = LED0_MASK;  // like TRISCbits.TRISC18 = 0
-	LATCSET = LED0_MASK;           // LED off
+	LED0_Off();           // LED off
+
 
 	// SW0: PB31 input with pull-up
 	TRISBbits.DIRCLR = BUTTON0_MASK;
