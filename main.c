@@ -23,13 +23,17 @@ int main(void) {
 	uint32_t t1 = 0;
 	setvbuf(stdout, NULL, _IONBF, 0);
 
+	printf("System booted at %lu Hz\r\n", BOARD_CPU_CLOCK);
+	SWO_PrintString("SWO ready\r\n");
+
 	while (1) {
 		if (DelayMs(&t1, BOARD_LED_BLINK_MS)) {
 			// --- LED control in PIC32MZ style ---
-			LED0_Toggle();;   // Toggle LED (PC18, active low)
+			LED0_Toggle();  // Toggle LED (PC18, active low)
 
 			// --- Button read in PIC32MZ style ---
-			if (SW0_Pressed()) {  // PB31 active low
+			if (SW0_Pressed() && DelayMs(&lastPress, 200)) //with debouce
+			{  // PB31 active low
 				printf("Button pressed!\r\n");
 				SWO_PrintString("Button pressed!\r\n");
 			} else {

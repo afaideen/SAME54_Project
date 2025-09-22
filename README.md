@@ -1,4 +1,4 @@
-# SAME54 Project
+# SAME54 Project https://github.com/afaideen/SAME54_Project
 
 Bare-metal firmware for the **Microchip SAME54 Xplained Pro** development board.  
 The project uses a **PIC32MZ-style coding approach** (TRIS/LAT/PORT macros) for GPIO handling, while keeping full CMSIS register access for clock and peripheral setup.  
