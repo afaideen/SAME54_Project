@@ -22,15 +22,6 @@ void SystemConfigPerformance(void) {
 }
 
 void BOARD_Init(void) {
-//	// Configure LED0 (PC18) as output, initialize OFF (active low)
-//	PORT->Group[LED0_PORT].DIRSET.reg = LED0_MASK;
-//	PORT->Group[LED0_PORT].OUTSET.reg = LED0_MASK;  // LED off
-//
-//	// Configure Button SW0 (PB31) as input with pull-up
-//	PORT->Group[BUTTON0_PORT].DIRCLR.reg = BUTTON0_MASK;
-//	PORT->Group[BUTTON0_PORT].PINCFG[BUTTON0_PIN].bit.INEN = 1;
-//	PORT->Group[BUTTON0_PORT].PINCFG[BUTTON0_PIN].bit.PULLEN = 1;
-//	PORT->Group[BUTTON0_PORT].OUTSET.reg = BUTTON0_MASK; // enable pull-up
 
 	// LED0: PC18 output, init off (active low)
 	TRISCbits.DIRSET = LED0_MASK;  // like TRISCbits.TRISC18 = 0
@@ -43,27 +34,7 @@ void BOARD_Init(void) {
 	LATBSET = BUTTON0_MASK;        // pull-up
 }
 
-//-----------------------------------------------------------------------------
-// LED helpers (PC18, active low)
-//-----------------------------------------------------------------------------
-void LED_On(void) {
-	PORTCbits.OUTCLR = LED0_MASK;  // active low
-}
 
-void LED_Off(void) {
-	PORTCbits.OUTSET = LED0_MASK;
-}
-
-void LED_Toggle(void) {
-	PORTCbits.OUTTGL = LED0_MASK;
-}
-
-//-----------------------------------------------------------------------------
-// Button helper (PB31, active low)
-//-----------------------------------------------------------------------------
-bool Button_IsPressed(void) {
-	return (PORTBINbits.reg & BUTTON0_MASK) == 0; // active low
-}
 
 
 

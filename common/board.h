@@ -44,12 +44,20 @@
 #define LED0_PIN      18
 #define LED0_MASK     (1 << LED0_PIN)
 
+// Inline macros for LED0 control
+#define LED0_On()       (LATCCLR = LED0_MASK)  // drive low → ON
+#define LED0_Off()      (LATCSET = LED0_MASK)  // drive high → OFF
+#define LED0_Toggle()   (LATCTGL = LED0_MASK)
+
 //-----------------------------------------------------------------------------
 // Button SW0 (PB31, active low, needs pull-up)
 //-----------------------------------------------------------------------------
 #define BUTTON0_PORT  1
 #define BUTTON0_PIN   31
 #define BUTTON0_MASK  (1 << BUTTON0_PIN)
+
+// Inline macro for SW0 read
+#define SW0_Pressed()   ((PORTBINbits.reg & BUTTON0_MASK) == 0)  // active low
 
 //-----------------------------------------------------------------------------
 // UART (SERCOM2, PB24 RX, PB25 TX)
@@ -83,9 +91,5 @@
 void SystemConfigPerformance(void);
 void BOARD_Init(void);
 
-void LED_On(void);
-void LED_Off(void);
-void LED_Toggle(void);
-bool Button_IsPressed(void);
 
 #endif
