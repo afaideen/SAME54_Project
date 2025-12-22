@@ -18,7 +18,7 @@ int main(void) {
 	UART2_DMA_Init();
 	UART2_DMA_SetCallback(dma_done_callback);
 	SWO_Init(BOARD_CPU_CLOCK, BOARD_SWO_BAUDRATE);
-	BOARD_Init();
+	board_init();
 
 	uint32_t t1 = 0;
 	setvbuf(stdout, NULL, _IONBF, 0);
@@ -29,7 +29,7 @@ int main(void) {
 	while (1) {
 		if (DelayMs(&t1, BOARD_LED_BLINK_MS)) {
 			// --- LED control in PIC32MZ style ---
-			LED0_Toggle();  // Toggle LED (PC18, active low)
+			board_led0_toggle();  // Toggle LED (PC18, active low)
 
 			// --- Button read in PIC32MZ style ---
 			if (SW0_Pressed() && DelayMs(&lastPress, 200)) //with debouce

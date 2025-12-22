@@ -2,12 +2,15 @@
 #include "systick.h"
 
 
-
-void BOARD_Init(void) {
+/**
+ * Initializes board peripherals including LED and button
+ * Configures LED0 (PC18) as output (active low) and SW0 (PB31) as input with pull-up
+ */
+void board_init(void) {
 
 	// LED0: PC18 output, init OFF (active low)
     PORT_DIRSET(LED0_PORT, LED0_MASK);
-    LED0_Off();
+    board_led0_off();
 
     // SW0: PB31 input with pull-up (active low)
     PORT_DIRCLR(BUTTON0_PORT, BUTTON0_MASK);
@@ -19,22 +22,55 @@ void BOARD_Init(void) {
     PORT_OUTSET(BUTTON0_PORT, BUTTON0_MASK);
 }
 
-bool led0_is_on(void)
+/**
+ * Checks if LED0 is currently ON
+ * @return true if LED0 is on, false otherwise (LED0 is active low)
+ */
+bool board_led0_is_on(void)
 {
     /* Active-low LED on PC18 */
     return ((PORT_REGS->GROUP[LED0_PORT].PORT_OUT & (LED0_MASK)) == 0);
 }
 
-
-
-static sw_state_t sw0_state = {
-    .stable_state = false,
-    .last_raw = false,
-    .press_start_ms = 0
-};
-
-bool sw_pressed(sw_id_t sw, uint32_t debounce)
+/**
+ * Turns LED0 ON
+ * LED0 is active low, so this drives PC18 low
+ */
+void board_led0_on(void)
 {
+    LED0_On();
+}
+
+/**
+ * Turns LED0 OFF
+ * LED0 is active low, so this drives PC18 high
+ */
+void board_led0_off(void)
+{
+    LED0_Off();
+}
+
+/**
+ * Toggles LED0 state
+ */
+void board_led0_toggle(void)
+{
+    LED0_Toggle();
+}
+
+/**
+ * Detects if a switch is pressed with debouncing
+ * @param sw Switch ID to check
+ * @param debounce Debounce time in milliseconds
+ * @return true if switch is stably pressed for at least debounce duration, false otherwise
+ */
+bool board_sw_pressed(sw_id_t sw, uint32_t debounce)
+{
+    static sw_state_t sw0_state = {
+        .stable_state = false,
+        .last_raw = false,
+        .press_start_ms = 0
+    };
     bool raw;
     sw_state_t *s;
     uint32_t now = millis();

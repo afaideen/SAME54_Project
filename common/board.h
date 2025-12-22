@@ -111,9 +111,12 @@ typedef struct {
 // Prototypes
 //-----------------------------------------------------------------------------
 
-void BOARD_Init(void);
-bool led0_is_on(void);
-bool sw_pressed(sw_id_t sw, uint32_t debounce);
+void board_init(void);
+bool board_led0_is_on(void);
+void board_led0_on(void);
+void board_led0_off(void);
+void board_led0_toggle(void);
+bool board_sw_pressed(sw_id_t sw, uint32_t debounce);
 
 
 

@@ -23,7 +23,6 @@ void UART2_Log(const char *fmt, ...)
 
     va_list ap;
     va_start(ap, fmt);
-//    (void)vsnprintf(buf, sizeof(buf), fmt, ap);
      (void)vsnprintf(msg, sizeof(msg), fmt, ap);
     va_end(ap);
     
