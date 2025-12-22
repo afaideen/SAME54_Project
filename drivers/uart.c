@@ -135,47 +135,47 @@ void UART2_Init(void) {
     SERCOM2_REGS->USART_INT.SERCOM_CTRLA |= SERCOM_USART_INT_CTRLA_ENABLE_Msk;
     while ((SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_ENABLE_Msk) != 0U) { }
 }
-void uart_init(void)
-{
-    uart_pins_init();
-    /* Optional safety: disable before config */
-    SERCOM2_REGS->USART_INT.SERCOM_CTRLA &= ~SERCOM_USART_INT_CTRLA_ENABLE_Msk;
-    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
-
-    /* CTRLA: matches PLIB exactly */
-    SERCOM2_REGS->USART_INT.SERCOM_CTRLA =
-        SERCOM_USART_INT_CTRLA_MODE_USART_INT_CLK |
-        SERCOM_USART_INT_CTRLA_RXPO(0x1UL) |
-        SERCOM_USART_INT_CTRLA_TXPO(0x0UL) |
-        SERCOM_USART_INT_CTRLA_DORD_Msk |
-        SERCOM_USART_INT_CTRLA_IBON_Msk |
-        SERCOM_USART_INT_CTRLA_FORM(0x0UL) |
-        SERCOM_USART_INT_CTRLA_SAMPR(0UL);
-
-    /* BAUD: matches PLIB exactly */
-    uint16_t baudReg = sercom_usart_baud_calc(GCLK1_CLOCK_HZ, UART_BAUDRATE); // ~64530 at 120MHz
-    SERCOM2_REGS->USART_INT.SERCOM_BAUD = (uint16_t)SERCOM_USART_INT_BAUD_BAUD(baudReg);
-//        (uint16_t)SERCOM_USART_INT_BAUD_BAUD(SERCOM2_USART_INT_BAUD_VALUE);
-
-    /* CTRLB: matches PLIB exactly (TX only) */
-    SERCOM2_REGS->USART_INT.SERCOM_CTRLB =
-        SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT |
-        SERCOM_USART_INT_CTRLB_SBMODE_1_BIT |
-        SERCOM_USART_INT_CTRLB_TXEN_Msk;
-
-    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
-
-    /* Enable: matches PLIB */
-    SERCOM2_REGS->USART_INT.SERCOM_CTRLA |= SERCOM_USART_INT_CTRLA_ENABLE_Msk;
-
-    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
-    
-    while (SERCOM2_REGS->USART_INT.SERCOM_INTFLAG &
-       SERCOM_USART_INT_INTFLAG_RXC_Msk)
-    {
-        (void)SERCOM2_REGS->USART_INT.SERCOM_DATA;
-    }
-}
+//void uart_init(void)
+//{
+//    uart_pins_init();
+//    /* Optional safety: disable before config */
+//    SERCOM2_REGS->USART_INT.SERCOM_CTRLA &= ~SERCOM_USART_INT_CTRLA_ENABLE_Msk;
+//    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
+//
+//    /* CTRLA: matches PLIB exactly */
+//    SERCOM2_REGS->USART_INT.SERCOM_CTRLA =
+//        SERCOM_USART_INT_CTRLA_MODE_USART_INT_CLK |
+//        SERCOM_USART_INT_CTRLA_RXPO(0x1UL) |
+//        SERCOM_USART_INT_CTRLA_TXPO(0x0UL) |
+//        SERCOM_USART_INT_CTRLA_DORD_Msk |
+//        SERCOM_USART_INT_CTRLA_IBON_Msk |
+//        SERCOM_USART_INT_CTRLA_FORM(0x0UL) |
+//        SERCOM_USART_INT_CTRLA_SAMPR(0UL);
+//
+//    /* BAUD: matches PLIB exactly */
+//    uint16_t baudReg = sercom_usart_baud_calc(GCLK1_CLOCK_HZ, UART_BAUDRATE); // ~64530 at 120MHz
+//    SERCOM2_REGS->USART_INT.SERCOM_BAUD = (uint16_t)SERCOM_USART_INT_BAUD_BAUD(baudReg);
+////        (uint16_t)SERCOM_USART_INT_BAUD_BAUD(SERCOM2_USART_INT_BAUD_VALUE);
+//
+//    /* CTRLB: matches PLIB exactly (TX only) */
+//    SERCOM2_REGS->USART_INT.SERCOM_CTRLB =
+//        SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT |
+//        SERCOM_USART_INT_CTRLB_SBMODE_1_BIT |
+//        SERCOM_USART_INT_CTRLB_TXEN_Msk;
+//
+//    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
+//
+//    /* Enable: matches PLIB */
+//    SERCOM2_REGS->USART_INT.SERCOM_CTRLA |= SERCOM_USART_INT_CTRLA_ENABLE_Msk;
+//
+//    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
+//
+//    while (SERCOM2_REGS->USART_INT.SERCOM_INTFLAG &
+//       SERCOM_USART_INT_INTFLAG_RXC_Msk)
+//    {
+//        (void)SERCOM2_REGS->USART_INT.SERCOM_DATA;
+//    }
+//}
 // Blocking transmit
 void UART2_Putc(char c) {
     while ((SERCOM2_REGS->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_DRE_Msk) == 0u) {}
