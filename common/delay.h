@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-bool DelayMs(uint32_t *t1, unsigned int ms);
+bool DelayMsAsync(uint32_t *t1, unsigned int ms);
+void DelayMs(uint32_t delay_ms);
 
 #endif

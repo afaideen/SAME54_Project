@@ -3,93 +3,118 @@
 
 #include "sam.h"
 #include <stdbool.h>
+//#include "component/port.h"   // for PORT_PINCFG_INEN_Msk, PORT_PINCFG_PULLEN_Msk
+
 
 //-----------------------------------------------------------------------------
-// System Clock
+// System Clock 
 //-----------------------------------------------------------------------------
-#define BOARD_CPU_CLOCK       120000000UL
+/* Board crystal + DPLL0 target */
 #define BOARD_XOSC0_FREQ      12000000UL
+#define BOARD_DPLL0_FREQ      120000000UL
 
+/* === Only change this === */
+//#define BOARD_CPU_CLOCK       120000000UL   /* or 120000000UL */
+#define BOARD_CPU_CLOCK        60000000UL   /* or  60000000UL */
+
+#define CPU_CLOCK_HZ          BOARD_CPU_CLOCK
+
+/* CPU divider from DPLL0 */
+#define CPU_DIVIDER           (BOARD_DPLL0_FREQ / BOARD_CPU_CLOCK)
+
+#if (BOARD_DPLL0_FREQ % BOARD_CPU_CLOCK) != 0
+#error "BOARD_CPU_CLOCK must divide BOARD_DPLL0_FREQ evenly"
+#endif
+
+#if (CPU_DIVIDER < 1) || (CPU_DIVIDER > 255)
+#error "CPU_DIVIDER out of range for MCLK_CPUDIV"
+#endif
+
+
+
+/* GCLK0 is DPLL0 / 1 */
+#define GCLK0_DIVIDER         1u
+#define GCLK0_CLOCK_HZ        (BOARD_DPLL0_FREQ / GCLK0_DIVIDER)
+
+/* Make GCLK1 follow CPU rate: DPLL0 / CPU_DIVIDER */
+#define GCLK1_DIVIDER         (CPU_DIVIDER)
+#define GCLK1_CLOCK_HZ        (BOARD_DPLL0_FREQ / GCLK1_DIVIDER)
+
+#if (GCLK1_CLOCK_HZ != CPU_CLOCK_HZ)
+#error "UART expects GCLK1 to match CPU clock"
+#endif
+
+/*-----------------------------------------------------------------------------
+// UART SERCOM2
 //-----------------------------------------------------------------------------
-// Port group aliases (PIC32MZ TRIS/LAT style)
+/* SAME54 Xplained Pro EDBG VCOM UART:
+   PB24 = SERCOM2 PAD1 (RX)
+   PB25 = SERCOM2 PAD0 (TX)
+   Peripheral function = D
+*/
+#define UART_RX_PORT_GROUP     (1U)    /* 0=A, 1=B, 2=C, 3=D */
+#define UART_RX_PIN            (24U)   /* PB24 */
+#define UART_TX_PORT_GROUP     (1U)    /* PORTB */
+#define UART_TX_PIN            (25U)   /* PB25 */
+#define UART_PMUX_FUNC_D       (PORT_PMUX_PMUXE_D_Val) /* same numeric value used for PMUXE/PMUXO */
+#define UART_BAUDRATE           115200u
 //-----------------------------------------------------------------------------
-#define TRISAbits   (PORT->Group[0].DIR)
-#define TRISBbits   (PORT->Group[1].DIR)
-#define TRISCbits   (PORT->Group[2].DIR)
+// PORT helper macros 
+//-----------------------------------------------------------------------------
+#define PORT_DIRSET(port, mask)   (PORT_REGS->GROUP[(port)].PORT_DIRSET = (mask))
+#define PORT_DIRCLR(port, mask)   (PORT_REGS->GROUP[(port)].PORT_DIRCLR = (mask))
+#define PORT_OUTSET(port, mask)   (PORT_REGS->GROUP[(port)].PORT_OUTSET = (mask))
+#define PORT_OUTCLR(port, mask)   (PORT_REGS->GROUP[(port)].PORT_OUTCLR = (mask))
+#define PORT_OUTTGL(port, mask)   (PORT_REGS->GROUP[(port)].PORT_OUTTGL = (mask))
+#define PORT_IN(port)             (PORT_REGS->GROUP[(port)].PORT_IN)
 
-#define LATAbits    (PORT->Group[0].OUT)
-#define LATBbits    (PORT->Group[1].OUT)
-#define LATCbits    (PORT->Group[2].OUT)
+#define PORT_PINCFG_SET(port, pin, mask)    (PORT_REGS->GROUP[(port)].PORT_PINCFG[(pin)] = (uint8_t)(mask))
 
-#define LATASET     (PORT->Group[0].OUTSET)
-#define LATACLR     (PORT->Group[0].OUTCLR)
-#define LATATGL     (PORT->Group[0].OUTTGL)
+#define PORT_PINCFG_OR(port, pin, mask)     (PORT_REGS->GROUP[(port)].PORT_PINCFG[(pin)] |= (uint8_t)(mask))
 
-#define LATBSET     (PORT->Group[1].OUTSET)
-#define LATBCLR     (PORT->Group[1].OUTCLR)
-#define LATBTGL     (PORT->Group[1].OUTTGL)
-
-#define LATCSET     (PORT->Group[2].OUTSET)
-#define LATCCLR     (PORT->Group[2].OUTCLR)
-#define LATCTGL     (PORT->Group[2].OUTTGL)
-
-#define PORTAINbits (PORT->Group[0].IN)
-#define PORTBINbits (PORT->Group[1].IN)
-#define PORTCINbits (PORT->Group[2].IN)
+#define PORT_PINCFG_INEN_PULLEN             (PORT_PINCFG_INEN_Msk | PORT_PINCFG_PULLEN_Msk)
 
 //-----------------------------------------------------------------------------
 // LED0 (PC18, active low)
 //-----------------------------------------------------------------------------
-#define LED0_PORT     2
-#define LED0_PIN      18
-#define LED0_MASK     (1 << LED0_PIN)
+#define LED0_PORT     2u
+#define LED0_PIN      18u
+#define LED0_MASK     (1u << LED0_PIN)
 
-// Inline macros for LED0 control
-#define LED0_On()       (LATCCLR = LED0_MASK)  // drive low → ON
-#define LED0_Off()      (LATCSET = LED0_MASK)  // drive high → OFF
-#define LED0_Toggle()   (LATCTGL = LED0_MASK)
+#define LED0_On()       PORT_OUTCLR(LED0_PORT, LED0_MASK)  // low => ON
+#define LED0_Off()      PORT_OUTSET(LED0_PORT, LED0_MASK)  // high => OFF
+#define LED0_Toggle()   PORT_OUTTGL(LED0_PORT, LED0_MASK)
 
 //-----------------------------------------------------------------------------
 // Button SW0 (PB31, active low, needs pull-up)
 //-----------------------------------------------------------------------------
-#define BUTTON0_PORT  1
-#define BUTTON0_PIN   31
-#define BUTTON0_MASK  (1 << BUTTON0_PIN)
+#define BUTTON0_PORT  1u
+#define BUTTON0_PIN   31u
+#define BUTTON0_MASK  (1u << BUTTON0_PIN)
 
-// Inline macro for SW0 read
-#define SW0_Pressed()   ((PORTBINbits.reg & BUTTON0_MASK) == 0)  // active low
-
-//-----------------------------------------------------------------------------
-// UART (SERCOM2, PB24 RX, PB25 TX)
-//-----------------------------------------------------------------------------
-#define BOARD_UART_BAUDRATE   115200UL
-#define BOARD_UART_DMA_CH     0
-
-#define UART_SERCOM_INDEX     2
-#define UART_TX_PORT          1
-#define UART_TX_PIN           25
-#define UART_TX_PMUX          MUX_PB25C_SERCOM2_PAD0
-#define UART_RX_PORT          1
-#define UART_RX_PIN           24
-#define UART_RX_PMUX          MUX_PB24C_SERCOM2_PAD1
+#define SW0_Pressed()  ((PORT_IN(BUTTON0_PORT) & BUTTON0_MASK) == 0u)
+#define DEBOUNCE_TIME       200
 
 //-----------------------------------------------------------------------------
-// SWO (PB30)
+// Variable type
 //-----------------------------------------------------------------------------
-#define BOARD_SWO_BAUDRATE    2000000UL
-#define SWO_PORT              1
-#define SWO_PIN               30
-
-//-----------------------------------------------------------------------------
-// Timing
-//-----------------------------------------------------------------------------
-#define BOARD_LED_BLINK_MS    1000
-
+typedef enum {
+    SW0 = 0,
+    /* future: SW1, SW2 */
+} sw_id_t;
+typedef struct {
+    bool     stable_state;
+    bool     last_raw;
+    uint32_t press_start_ms;
+} sw_state_t;
 //-----------------------------------------------------------------------------
 // Prototypes
 //-----------------------------------------------------------------------------
 void SystemConfigPerformance(void);
 void BOARD_Init(void);
+bool led0_is_on(void);
+bool sw_pressed(sw_id_t sw, uint32_t debounce);
+
 
 
 #endif
