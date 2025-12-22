@@ -14,8 +14,8 @@
 #define BOARD_DPLL0_FREQ      120000000UL
 
 /* === Only change this === */
-//#define BOARD_CPU_CLOCK       120000000UL   /* or 120000000UL */
-#define BOARD_CPU_CLOCK        60000000UL   /* or  60000000UL */
+#define BOARD_CPU_CLOCK       120000000UL   /* or 120000000UL */
+//#define BOARD_CPU_CLOCK        60000000UL   /* or  60000000UL */
 
 #define CPU_CLOCK_HZ          BOARD_CPU_CLOCK
 
@@ -110,7 +110,7 @@ typedef struct {
 //-----------------------------------------------------------------------------
 // Prototypes
 //-----------------------------------------------------------------------------
-void SystemConfigPerformance(void);
+
 void BOARD_Init(void);
 bool led0_is_on(void);
 bool sw_pressed(sw_id_t sw, uint32_t debounce);
