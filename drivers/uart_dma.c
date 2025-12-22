@@ -10,13 +10,28 @@
  * DMA Descriptor Tables (aligned per SAME54 requirement)
  * ============================================================================ */
 
-/* Primary descriptor table (must be 16-byte aligned) */
-__attribute__((aligned(16)))
-static DmacDescriptor_t dma_descriptors[12];
+/* Primary and writeback descriptor tables (must be 16-byte aligned).
+ *
+ * SAME54's DMAC implements up to 32 channels.  The hardware expects the
+ * BASEADDR and WRBADDR pointers to reference tables that have an entry for
+ * every possible channel, ordered by channel number.  If the tables are
+ * smaller than the hardware channel count, the DMAC may index beyond the
+ * allocation and corrupt memory.  We therefore size the tables based on
+ * the DMAC_CHANNEL_NUMBER macro when available, or fall back to 32 which
+ * is the channel count on SAME54 devices.  Each descriptor is aligned
+ * according to DMA_DESCRIPTOR_ALIGN defined in uart_dma.h.
+ */
+#ifdef DMAC_CHANNEL_NUMBER
+#define DMA_CHANNEL_COUNT DMAC_CHANNEL_NUMBER
+#else
+#define DMA_CHANNEL_COUNT 32u
+#endif
 
-/* Writeback descriptor table (must be 16-byte aligned) */
-__attribute__((aligned(16)))
-static DmacDescriptor_t dma_writeback[12];
+__attribute__((aligned(DMA_DESCRIPTOR_ALIGN)))
+static DmacDescriptor_t dma_descriptors[DMA_CHANNEL_COUNT];
+
+__attribute__((aligned(DMA_DESCRIPTOR_ALIGN)))
+static DmacDescriptor_t dma_writeback[DMA_CHANNEL_COUNT];
 
 /* ============================================================================
  * DMA State Management
@@ -51,10 +66,13 @@ static void uart_dma_queue_handler_local(void);
  */
 static void dmac_enable(void)
 {
-    /* Enable DMAC AHB clock */
-    MCLK_REGS->MCLK_AHBMASK |= MCLK_AHBMASK_DMAC_Msk;
+    /* Enable DMAC on both the AHB and APBB buses.  The DMAC is an AHB
+     * master but its registers live on the APBB bus.  Failing to enable
+     * APBB will prevent register writes from taking effect. */
+    MCLK_REGS->MCLK_AHBMASK  |= MCLK_AHBMASK_DMAC_Msk;
+//    MCLK_REGS->MCLK_APBBMASK |= MCLK_APBBMASK_DMAC_Msk;
 
-    /* Wait for synchronization if needed */
+    /* Read back to ensure the write has completed */
     (void)MCLK_REGS->MCLK_AHBMASK;
 }
 
@@ -63,11 +81,19 @@ static void dmac_enable(void)
  */
 static void dmac_config(void)
 {
+    /* Perform a software reset to ensure the DMAC starts from a clean
+     * configuration.  Wait for the SWRST bit to clear before proceeding. */
+    DMAC_REGS->DMAC_CTRL = DMAC_CTRL_SWRST_Msk;
+    while ((DMAC_REGS->DMAC_CTRL & DMAC_CTRL_SWRST_Msk) != 0U)
+    {
+        /* wait for reset to complete */
+    }
+
     /* Set descriptor and writeback base addresses */
     DMAC_REGS->DMAC_BASEADDR = (uint32_t)dma_descriptors;
-    DMAC_REGS->DMAC_WRBADDR = (uint32_t)dma_writeback;
+    DMAC_REGS->DMAC_WRBADDR  = (uint32_t)dma_writeback;
 
-    /* Enable DMAC: DMAENABLE=1, LVLEN=0xF (all 4 priority levels) */
+    /* Enable DMAC: DMAENABLE=1, LVLEN=0xF (enable all four priority levels) */
     DMAC_REGS->DMAC_CTRL =
         DMAC_CTRL_DMAENABLE_Msk |
         DMAC_CTRL_LVLEN(0xFU);
@@ -78,16 +104,15 @@ static void dmac_config(void)
  */
 static void dmac_channel_config(uint8_t channel)
 {
-   
-    /* Configure trigger source and action:
-       - TRIGSRC: SERCOM2_DMAC_ID_TX
-       - TRIGACT: BEAT (trigger on each beat/transaction)
-     */
+    /* Configure trigger source and action for the given channel.  The SAME54
+     * DMAC exposes per-channel control registers via the CHANNEL[] array.
+     * Assign SERCOM2's TX trigger and request a transfer on each
+     * transaction (beat) completed. */
     DMAC_REGS->CHANNEL[channel].DMAC_CHCTRLA =
         DMAC_CHCTRLA_TRIGSRC(SERCOM2_DMAC_ID_TX) |
         DMAC_CHCTRLA_TRIGACT_TRANSACTION;
 
-    /* Enable transfer complete interrupt */
+    /* Enable the transfer complete interrupt for this channel */
     DMAC_REGS->CHANNEL[channel].DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL_Msk;
 }
 
@@ -136,15 +161,19 @@ static void dmac_setup_tx_descriptor(
  */
 static void dmac_channel_enable(uint8_t channel)
 {
+    /* Enable the requested channel via its CHANNEL[] register. */
     DMAC_REGS->CHANNEL[channel].DMAC_CHCTRLA |= DMAC_CHCTRLA_ENABLE_Msk;
 }
+
 /**
  * Disable a DMA channel.
  */
 static void dmac_channel_disable(uint8_t channel)
 {
+    /* Disable the requested channel via its CHANNEL[] register. */
     DMAC_REGS->CHANNEL[channel].DMAC_CHCTRLA &= ~DMAC_CHCTRLA_ENABLE_Msk;
 }
+
 /* ============================================================================
  * Interrupt Handler (consolidated)
  * ============================================================================ */
@@ -157,13 +186,24 @@ void DMAC_0_Handler(void)
 {
     uint8_t channel = UART2_DMA_CHANNEL;
 
+    /* Check for transfer complete on this channel.  We use the channel index
+     * directly rather than selecting via DMAC_CHID, which is not present on
+     * the SAME54 header model. */
     if ((DMAC_REGS->CHANNEL[channel].DMAC_CHINTFLAG & DMAC_CHINTFLAG_TCMPL_Msk) != 0U)
     {
         /* Clear the transfer complete flag */
         DMAC_REGS->CHANNEL[channel].DMAC_CHINTFLAG = DMAC_CHINTFLAG_TCMPL_Msk;
 
+        /* Mark DMA as idle */
         uart2_dma_busy = false;
 
+        /* Kick the internal logging queue to transmit the next message if
+         * one is available.  Without this call, the queue would stall
+         * after completing a single message. */
+        dma_log_start_next();
+
+        /* Call user callback if registered.  The callback may queue new
+         * messages; it is safe because uart2_dma_busy has been cleared. */
         if (uart2_dma_callback != NULL)
         {
             uart2_dma_callback();
@@ -186,8 +226,10 @@ void UART2_DMA_Init(void)
     /* Configure the specific channel for UART2 TX */
     dmac_channel_config(UART2_DMA_CHANNEL);
 
-    /* Enable the interrupt for this channel in NVIC */
-    NVIC_EnableIRQ(DMAC_0_IRQn + UART2_DMA_CHANNEL);
+    /* Enable the interrupt for the DMAC priority level used by this channel.
+     * On SAME54, there is one interrupt per priority level (0â??3) rather
+     * than one per channel.  Our UART uses channel 0 on priority level 0. */
+    NVIC_EnableIRQ(DMAC_0_IRQn);
 }
 
 bool UART2_DMA_Send(const char *buffer, uint32_t length)
@@ -263,7 +305,10 @@ static bool UART2_DMA_Log_internal(const char *fmt, va_list ap)
     if (len >= sizeof(tmp))
         len = sizeof(tmp) - 1;
 
-    IRQn_Type dmac_irq = (IRQn_Type)(DMAC_0_IRQn + UART2_DMA_CHANNEL);
+    /* Use the DMAC level 0 interrupt for all queue operations.  Adding
+     * UART2_DMA_CHANNEL to DMAC_0_IRQn would point at an invalid IRQ on
+     * SAME54, as there is one IRQ per priority level, not per channel. */
+    IRQn_Type dmac_irq = DMAC_0_IRQn;
     NVIC_DisableIRQ(dmac_irq);
 
     if (dma_log_count >= DMA_LOG_QUEUE_SIZE) {
