@@ -20,6 +20,6 @@
  * Should be called early in startup before using any peripherals
  */
 void SystemConfigPerformance(void);
-
+void CPU_LogClockOverview(void);
 
 #endif //CPU_H

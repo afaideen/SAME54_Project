@@ -1,9 +1,12 @@
 //
 // Created by han on 22-Dec-25.
 //
+#include <stdio.h>
 #include <sam.h>
 #include "board.h"
 #include "cpu.h"
+#include "../drivers/uart.h"
+#include "../drivers/uart_dma.h"
 
 // ****************************************************************************
 // ****************************************************************************
@@ -354,5 +357,31 @@ void SystemConfigPerformance(void)
     RTCC_ForceOffAtBoot();
 }
 
+void CPU_LogClockOverview(void)
+{
+    uint32_t cpu_hz   = CPU_CLOCK_HZ;
+    uint32_t gclk1_hz = CPU_CLOCK_HZ / GCLK1_DIVIDER;
+
+    printf("\r\n================ CLOCK OVERVIEW ================\r\n");
+    printf("CPU Clock      : %.3f MHz\r\n", cpu_hz / 1e6);
+    printf("Source         : DPLL0\r\n");
+    printf("DPLL0 Ref      : GCLK2 (48 MHz)\r\n");
+
+    printf("DPLL0 Ratio    : LDR=%lu, LDRFRAC=%lu\r\n",
+                  (OSCCTRL_REGS->DPLL[0].OSCCTRL_DPLLRATIO & OSCCTRL_DPLLRATIO_LDR_Msk) >> OSCCTRL_DPLLRATIO_LDR_Pos,
+                  (OSCCTRL_REGS->DPLL[0].OSCCTRL_DPLLRATIO & OSCCTRL_DPLLRATIO_LDRFRAC_Msk) >> OSCCTRL_DPLLRATIO_LDRFRAC_Pos);
+
+    printf("GCLK0 Divider  : %lu\r\n", (uint32_t)GCLK0_DIVIDER);
+    printf("CPU Divider    : %lu\r\n", (uint32_t)CPU_DIVIDER);
+    printf("GCLK1 (Periph) : %.3f MHz (DIV=%lu)\r\n",
+                  gclk1_hz / 1e6, (uint32_t)GCLK1_DIVIDER);
+
+    printf("SysTick        : 1 ms tick\r\n");
+    printf("DWT CYCCNT     : %s\r\n",
+                  (DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk) ? "ENABLED" : "DISABLED");
+
+    printf("RTCC           : DISABLED at boot\r\n");
+    printf("===============================================\r\n\r\n");
+}
 
 

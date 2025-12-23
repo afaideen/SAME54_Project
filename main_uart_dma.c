@@ -34,7 +34,7 @@ int main(void)
 {    
     SystemConfigPerformance();
     board_init();
-    
+    CPU_LogClockOverview();
     /* Note: driver now manages its own queue and ISR; no registration needed */
     board_led0_on();
 
@@ -58,6 +58,8 @@ int main(void)
     UART2_DMA_Log(banner[1]);
     UART2_DMA_Log(banner[2], BOARD_CPU_CLOCK);
     /* Return immediately from log calls; they are queued and sent by DMA */
+    
+    
 
     while (1) {
         static delay_t t_led = {0,500,0};
