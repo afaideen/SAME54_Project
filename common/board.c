@@ -10,8 +10,7 @@
  * Configures LED0 (PC18) as output (active low) and SW0 (PB31) as input with pull-up
  */
 void board_init(void) 
-{
-    SystemConfigPerformance();
+{    
     
 	// LED0: PC18 output, init OFF (active low)
     PORT_DIRSET(LED0_PORT, LED0_MASK);

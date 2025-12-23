@@ -1,11 +1,12 @@
-#include "uart.h"
-#include "uart_dma.h"
-#include "../common/board.h"
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "rtcc.h"
+#include "uart.h"
+#include "uart_dma.h"
+#include "../common/board.h"
 
 /* Timebase (must be provided by your project; typically SysTick 1ms) */
 extern uint32_t millis(void);
@@ -335,6 +336,28 @@ uint32_t UART2_DMA_Log_Dropped(void)
     return dma_log_dropped;
 }
 
+/* Format RTCC date/time as "YYYY-MM-DD HH:MM:SS".
+ * Returns true if RTCC is available and read succeeds; false otherwise.
+ */
+static bool rtcc_format_datetime(char *out, uint32_t out_sz)
+{
+    rtcc_datetime_t dt;
+    if ((out == NULL) || (out_sz == 0U)) {
+        return false;
+    }
+
+    if (!RTCC_GetDateTime(&dt)) {
+        out[0] = '\0';
+        return false;
+    }
+
+    (void)snprintf(out, out_sz, "%04u-%02u-%02u %02u:%02u:%02u",
+                   (unsigned)dt.year, (unsigned)dt.month, (unsigned)dt.day,
+                   (unsigned)dt.hour, (unsigned)dt.min, (unsigned)dt.sec);
+    return true;
+}
+
+
 /**
  * Enqueue formatted message for DMA transmission and return immediately.
  * Returns true if the message was queued, false if it was dropped (queue full
@@ -360,8 +383,21 @@ static bool UART2_DMA_Log_internal(const char *fmt, va_list ap)
 
     /* Compose final message: [TIME_MS][DELTA_MS] + body */
     char tmp[DMA_LOG_BUF_SIZE];
-    int n = snprintf(tmp, sizeof(tmp), "[%lu][%lu]%s",
+    char dt_str[24]; /* "YYYY-MM-DD HH:MM:SS" */
+    bool have_dt = rtcc_format_datetime(dt_str, sizeof(dt_str));
+
+    int n;
+    if (have_dt)
+    {
+        n = snprintf(tmp, sizeof(tmp), "[%s][%lu][%lu]%s",
+                     dt_str, (unsigned long)now, (unsigned long)delta, body);
+    }
+    else
+    {
+        n = snprintf(tmp, sizeof(tmp), "[----][%lu][%lu]%s",
                      (unsigned long)now, (unsigned long)delta, body);
+    }
+
     if (n <= 0) {
         return false;
     }

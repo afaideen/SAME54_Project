@@ -32,7 +32,7 @@ char banner[][100] = {
     };
 int main(void)
 {    
-    
+    SystemConfigPerformance();
     board_init();
     
     /* Note: driver now manages its own queue and ISR; no registration needed */
@@ -79,22 +79,7 @@ int main(void)
             board_led0_toggle();
             UART2_DMA_Log("LED0: %s\r\n", board_led0_is_on() ? "ON" : "OFF");
         }
-        
-        if (DelayMsAsync(&t_rtc))
-        {
-            t_rtc.t_delay = millis();
-
-            rtcc_datetime_t now;
-            if (RTCC_GetDateTime(&now)) {
-                UART2_DMA_Log("[RTCC] %04u-%02u-%02u %02u:%02u:%02u\r\n",
-                  now.year,
-                  now.month,
-                  now.day,
-                  now.hour,
-                  now.min,
-                  now.sec)
-            }
-        }
+  
     }
 
     return (EXIT_FAILURE);

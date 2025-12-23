@@ -27,6 +27,23 @@
 #pragma config NVMCTRL_REGION_LOCKS = 0xffffffff
 
 
+static inline void RTCC_ForceOffAtBoot(void)
+{
+    // Optional but recommended: stop IRQ side effects
+    NVIC_DisableIRQ(RTC_IRQn);
+
+    // Disable RTC (MODE2 view)
+    RTC_REGS->MODE2.RTC_CTRLA &= (uint16_t)~RTC_MODE2_CTRLA_ENABLE_Msk;
+    while ((RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_ENABLE_Msk) != 0U) { }
+
+    // Clear/disable interrupts (covers previous configs)
+    RTC_REGS->MODE2.RTC_INTENCLR = RTC_MODE2_INTENCLR_Msk;
+    RTC_REGS->MODE2.RTC_INTFLAG  = RTC_MODE2_INTFLAG_Msk;
+
+    // Optional: hard reset RTC registers to defaults (strongest ?OFF?)
+    RTC_REGS->MODE2.RTC_CTRLA = RTC_MODE2_CTRLA_SWRST_Msk;
+    while ((RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_SWRST_Msk) != 0U) { }
+}
 
 /**
  * Configures CPU for optimal performance
@@ -173,7 +190,7 @@ void SystemConfigPerformance(void)
     MCLK_REGS->MCLK_APBAMASK = 0x000007FFu;
     MCLK_REGS->MCLK_APBBMASK = 0x00018656u;
     
-
+    RTCC_ForceOffAtBoot();
 }
 
 

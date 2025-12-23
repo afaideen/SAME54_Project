@@ -28,6 +28,9 @@
 /* #define RTCC_RTCCTRL_SEL OSC32KCTRL_RTCCTRL_RTCSEL_ULP1K */
 #endif
 
+/* Option A: RTCC API is only valid after RTCC_Init() is called. */
+static bool s_rtcc_inited = false;
+
 static inline void rtc_mode2_wait_sync(uint32_t mask)
 {
     while ((RTC_REGS->MODE2.RTC_SYNCBUSY & mask) != 0U) { }
@@ -93,10 +96,13 @@ void RTCC_Init(void)
     /* Enable RTC */
     RTC_REGS->MODE2.RTC_CTRLA |= RTC_MODE2_CTRLA_ENABLE_Msk;
     while ((RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_ENABLE_Msk) != 0U) { }
+    
+    s_rtcc_inited = true;
 }
 
 bool RTCC_SetDateTime(const rtcc_datetime_t *dt)
 {
+    if (!s_rtcc_inited) return false;
     if (dt == NULL) return false;
     if (dt->year  < 2000U || dt->year > 2063U) return false;
     if (dt->month < 1U || dt->month > 12U) return false;
@@ -129,6 +135,7 @@ bool RTCC_SetDateTime(const rtcc_datetime_t *dt)
 
 bool RTCC_GetDateTime(rtcc_datetime_t *dt)
 {
+    if (!s_rtcc_inited) return false;
     if (dt == NULL) return false;
 
     /* With CLOCKSYNC enabled: wait until CLOCK is synchronized before reading */
