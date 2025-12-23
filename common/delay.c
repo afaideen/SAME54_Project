@@ -27,12 +27,13 @@ void DelayMs(uint32_t delay_ms)
  * @return true when delay has elapsed, false otherwise
  * Usage: Initialize *t1 to 0, call repeatedly until it returns true
  */
-bool DelayMsAsync(uint32_t *t1, unsigned int ms) {
-    if (*t1 == 0) {
-        *t1 = systick_ms;
+bool DelayMsAsync(delay_t *t1) 
+{
+    if (t1->t_delay == 0) {
+        t1->t_delay = systick_ms;
     }
-    if ((systick_ms - *t1) >= ms) {
-        *t1 = millis();
+    if ((systick_ms - t1->t_delay) >= t1->period) {
+        t1->t_delay = millis();
         return true;
     }
     return false;

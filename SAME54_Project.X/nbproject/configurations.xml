@@ -13,6 +13,7 @@
       <logicalFolder name="f2" displayName="drivers" projectFiles="true">
         <itemPath>../drivers/uart.h</itemPath>
         <itemPath>../drivers/uart_dma.h</itemPath>
+        <itemPath>../drivers/rtcc.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -31,10 +32,10 @@
       <logicalFolder name="f2" displayName="drivers" projectFiles="true">
         <itemPath>../drivers/uart.c</itemPath>
         <itemPath>../drivers/uart_dma.c</itemPath>
+        <itemPath>../drivers/rtcc.c</itemPath>
       </logicalFolder>
       <itemPath>../main.c</itemPath>
       <itemPath>../main_test.c</itemPath>
-      <itemPath>../common/user_row.c</itemPath>
       <itemPath>../main_uart_dma.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"

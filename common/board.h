@@ -107,6 +107,11 @@ typedef struct {
     bool     last_raw;
     uint32_t press_start_ms;
 } sw_state_t;
+typedef struct {
+    sw_id_t              id;
+    uint32_t     t_debounce;
+    uint32_t            cnt;
+} sw_t;
 //-----------------------------------------------------------------------------
 // Prototypes
 //-----------------------------------------------------------------------------
@@ -116,7 +121,7 @@ bool board_led0_is_on(void);
 void board_led0_on(void);
 void board_led0_off(void);
 void board_led0_toggle(void);
-bool board_sw_pressed(sw_id_t sw, uint32_t debounce);
+bool board_sw_pressed(sw_t *sw);
 
 
 

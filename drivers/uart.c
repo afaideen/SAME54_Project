@@ -4,11 +4,6 @@
 #include "../common/board.h"
 #include "../common/systick.h"
 
-//__attribute__((aligned(16))) DmacDescriptor dmaDescriptor[12];
-//__attribute__((aligned(16))) DmacDescriptor dmaWriteback[12];
-
-//static volatile bool uart2_dma_busy = false;
-//static UART2_DMA_Callback_t uart2_dma_callback = NULL;
 
 void UART2_Log(const char *fmt, ...)
 {
@@ -134,47 +129,7 @@ void UART2_Init(void) {
     SERCOM2_REGS->USART_INT.SERCOM_CTRLA |= SERCOM_USART_INT_CTRLA_ENABLE_Msk;
     while ((SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_ENABLE_Msk) != 0U) { }
 }
-//void uart_init(void)
-//{
-//    uart_pins_init();
-//    /* Optional safety: disable before config */
-//    SERCOM2_REGS->USART_INT.SERCOM_CTRLA &= ~SERCOM_USART_INT_CTRLA_ENABLE_Msk;
-//    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
-//
-//    /* CTRLA: matches PLIB exactly */
-//    SERCOM2_REGS->USART_INT.SERCOM_CTRLA =
-//        SERCOM_USART_INT_CTRLA_MODE_USART_INT_CLK |
-//        SERCOM_USART_INT_CTRLA_RXPO(0x1UL) |
-//        SERCOM_USART_INT_CTRLA_TXPO(0x0UL) |
-//        SERCOM_USART_INT_CTRLA_DORD_Msk |
-//        SERCOM_USART_INT_CTRLA_IBON_Msk |
-//        SERCOM_USART_INT_CTRLA_FORM(0x0UL) |
-//        SERCOM_USART_INT_CTRLA_SAMPR(0UL);
-//
-//    /* BAUD: matches PLIB exactly */
-//    uint16_t baudReg = sercom_usart_baud_calc(GCLK1_CLOCK_HZ, UART_BAUDRATE); // ~64530 at 120MHz
-//    SERCOM2_REGS->USART_INT.SERCOM_BAUD = (uint16_t)SERCOM_USART_INT_BAUD_BAUD(baudReg);
-////        (uint16_t)SERCOM_USART_INT_BAUD_BAUD(SERCOM2_USART_INT_BAUD_VALUE);
-//
-//    /* CTRLB: matches PLIB exactly (TX only) */
-//    SERCOM2_REGS->USART_INT.SERCOM_CTRLB =
-//        SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT |
-//        SERCOM_USART_INT_CTRLB_SBMODE_1_BIT |
-//        SERCOM_USART_INT_CTRLB_TXEN_Msk;
-//
-//    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
-//
-//    /* Enable: matches PLIB */
-//    SERCOM2_REGS->USART_INT.SERCOM_CTRLA |= SERCOM_USART_INT_CTRLA_ENABLE_Msk;
-//
-//    while (SERCOM2_REGS->USART_INT.SERCOM_SYNCBUSY != 0U) { }
-//
-//    while (SERCOM2_REGS->USART_INT.SERCOM_INTFLAG &
-//       SERCOM_USART_INT_INTFLAG_RXC_Msk)
-//    {
-//        (void)SERCOM2_REGS->USART_INT.SERCOM_DATA;
-//    }
-//}
+
 // Blocking transmit
 void UART2_Putc(char c) {
     while ((SERCOM2_REGS->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_DRE_Msk) == 0u) {}
@@ -198,59 +153,4 @@ void _mon_putc(char c)
     }
     UART2_Putc(c);
 }
-// ---------------- DMA EXTENSION ----------------
-//void UART2_DMA_Init(void) {
-//    MCLK->AHBMASK.bit.DMAC_ = 1;
-//    MCLK->APBBMASK.bit.DMAC_ = 1;
-//
-//    DMAC->BASEADDR.reg = (uint32_t)dmaDescriptor;
-//    DMAC->WRBADDR.reg  = (uint32_t)dmaWriteback;
-//    DMAC->CTRL.reg     = DMAC_CTRL_DMAENABLE | DMAC_CTRL_LVLEN(0xF);
-//
-//    DMAC->CHID.reg = BOARD_UART_DMA_CH;
-//    DMAC->CHCTRLA.reg = DMAC_CHCTRLA_TRIGSRC(SERCOM2_DMAC_ID_TX) |
-//                        DMAC_CHCTRLA_TRIGACT_BEAT;
-//
-//    DMAC->CHINTENSET.reg = DMAC_CHINTENSET_TCMPL;
-//    NVIC_EnableIRQ(DMAC_0_IRQn + BOARD_UART_DMA_CH); // maps to correct IRQ
-//}
-//
-//bool UART2_DMA_Send(const char *buffer, uint32_t length) {
-//    if (uart2_dma_busy) {
-//        return false; // busy, did not start
-//    }
-//
-//    uart2_dma_busy = true;
-//
-//    dmaDescriptor[BOARD_UART_DMA_CH].BTCTRL.reg = DMAC_BTCTRL_VALID |
-//                                  DMAC_BTCTRL_SRCINC |
-//                                  DMAC_BTCTRL_BEATSIZE_BYTE |
-//                                  DMAC_BTCTRL_BLOCKACT_INT;
-//    dmaDescriptor[BOARD_UART_DMA_CH].BTCNT.reg  = length;
-//    dmaDescriptor[BOARD_UART_DMA_CH].SRCADDR.reg = (uint32_t)(buffer + length);
-//    dmaDescriptor[BOARD_UART_DMA_CH].DSTADDR.reg = (uint32_t)&SERCOM2->USART.DATA.reg;
-//    dmaDescriptor[BOARD_UART_DMA_CH].DESCADDR.reg = 0;
-//
-//    DMAC->CHID.reg = BOARD_UART_DMA_CH;
-//    DMAC->CHCTRLA.bit.ENABLE = 1;
-//
-//    return true; // successfully started
-//}
-//
-//void DMAC_0_Handler(void) {
-//    if (DMAC->CHINTFLAG.reg & DMAC_CHINTFLAG_TCMPL) {
-//        DMAC->CHINTFLAG.reg = DMAC_CHINTFLAG_TCMPL; // clear
-//        uart2_dma_busy = false;
-//        if (uart2_dma_callback) {
-//            uart2_dma_callback(); // notify user
-//        }
-//    }
-//}
-//
-//bool UART2_DMA_IsBusy(void) {
-//    return uart2_dma_busy;
-//}
-//
-//void UART2_DMA_SetCallback(UART2_DMA_Callback_t cb) {
-//    uart2_dma_callback = cb;
-//}
+

@@ -4,6 +4,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef struct
+{
+    uint32_t t_delay;
+    uint32_t period;
+    int      cnt;
+    
+}delay_t;
+
 /**
  * Blocking delay in milliseconds
  * @param delay_ms Number of milliseconds to delay
@@ -18,7 +26,7 @@ void DelayMs(uint32_t delay_ms);
  * @return true when delay has elapsed, false otherwise
  * Usage: Initialize *t1 to 0, call repeatedly until it returns true
  */
-bool DelayMsAsync(uint32_t *t1, unsigned int ms);
+bool DelayMsAsync(delay_t *t1);
 
 /**
  * Blocking delay in CPU clock cycles

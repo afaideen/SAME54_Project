@@ -1,13 +1,18 @@
 #include "board.h"
 #include "systick.h"
-
+#include "delay.h"
+#include "cpu.h"
+#include "../drivers/uart_dma.h"
+#include "../drivers/rtcc.h"
 
 /**
  * Initializes board peripherals including LED and button
  * Configures LED0 (PC18) as output (active low) and SW0 (PB31) as input with pull-up
  */
-void board_init(void) {
-
+void board_init(void) 
+{
+    SystemConfigPerformance();
+    
 	// LED0: PC18 output, init OFF (active low)
     PORT_DIRSET(LED0_PORT, LED0_MASK);
     board_led0_off();
@@ -20,6 +25,13 @@ void board_init(void) {
 
     // Select pull-up: when PULLEN=1, OUT=1 means pull-up
     PORT_OUTSET(BUTTON0_PORT, BUTTON0_MASK);
+    
+    /* Initialize SysTick for 1ms ticks */
+    SysTick_Init_1ms_Best(BOARD_CPU_CLOCK, true);
+
+    /* Initialize the UART peripheral (SERCOM2) first, then DMA */    
+    UART2_DMA_Init();
+    RTC_CalendarInit();
 }
 
 /**
@@ -64,7 +76,8 @@ void board_led0_toggle(void)
  * @param debounce Debounce time in milliseconds
  * @return true if switch is stably pressed for at least debounce duration, false otherwise
  */
-bool board_sw_pressed(sw_id_t sw, uint32_t debounce)
+//bool board_sw_pressed(sw_id_t sw, uint32_t debounce)
+bool board_sw_pressed(sw_t *sw)
 {
     static sw_state_t sw0_state = {
         .stable_state = false,
@@ -75,7 +88,7 @@ bool board_sw_pressed(sw_id_t sw, uint32_t debounce)
     sw_state_t *s;
     uint32_t now = millis();
 
-    switch (sw) {
+    switch (sw->id) {
         case SW0:
             raw = SW0_Pressed();
             s = &sw0_state;
@@ -96,11 +109,18 @@ bool board_sw_pressed(sw_id_t sw, uint32_t debounce)
             s->stable_state = false;
         }
     }
-
+    
     /* qualify press duration */
     if (raw && !s->stable_state) {
-        if ((now - s->press_start_ms) >= debounce) {
+        if ((now - s->press_start_ms) >= sw->t_debounce) {
             s->stable_state = true;
+            sw->cnt++;
+            UART2_DMA_Log("\r\nSW0 %s (>=%lu ms)\r\n",
+                          SW0_Pressed() ? "PRESSED" : "RELEASED",
+                          sw->t_debounce);
+
+            DelayMs(10);
+            while (SW0_Pressed()); /* Block until sw released */
         }
     }
 

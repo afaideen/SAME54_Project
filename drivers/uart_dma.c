@@ -247,6 +247,7 @@ void DMAC_0_Handler(void)
 
 void UART2_DMA_Init(void)
 {
+    UART2_Init();
     /* Initialize timestamp baseline for log prefixes */
     s_uart2_log_prev_ms = millis();
     s_uart2_log_prev_valid = false;
