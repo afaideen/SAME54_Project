@@ -30,7 +30,9 @@ void board_init(void)
 
     /* Initialize the UART peripheral (SERCOM2) first, then DMA */    
     UART2_DMA_Init();
-    RTCC_Init();
+    #ifdef BOARD_ENABLE_RTCC
+        RTCC_Init();
+    #endif
 }
 
 /**

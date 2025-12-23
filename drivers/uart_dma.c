@@ -65,7 +65,6 @@ static bool s_uart2_log_prev_valid = false;
 
 /* Forward declarations for logger helpers */
 static void dma_log_start_next(void);
-static void uart_dma_queue_handler_local(void);
 
 /* ============================================================================
  * Helper Functions
@@ -471,12 +470,4 @@ static void dma_log_start_next(void)
     }
 }
 
-/**
- * Local handler for UART DMA completion (for logging).
- * This is called from the DMA interrupt handler.
- */
-static void uart_dma_queue_handler_local(void)
-{
-    /* Start the next log message transmission */
-    dma_log_start_next();
-}
+

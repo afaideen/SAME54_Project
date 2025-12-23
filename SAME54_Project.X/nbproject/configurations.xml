@@ -35,8 +35,8 @@
         <itemPath>../drivers/rtcc.c</itemPath>
       </logicalFolder>
       <itemPath>../main.c</itemPath>
-      <itemPath>../main_test.c</itemPath>
       <itemPath>../main_uart_dma.c</itemPath>
+      <itemPath>../main_uart.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -106,7 +106,7 @@
         <C32Global>
         </C32Global>
       </item>
-      <item path="../main_test.c" ex="true" overriding="false">
+      <item path="../main_uart.c" ex="true" overriding="false">
       </item>
       <item path="../main_uart_dma.c" ex="false" overriding="false">
         <C32>

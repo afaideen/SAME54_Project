@@ -86,9 +86,6 @@ void SystemConfigPerformance(void)
 
     /* OSCCTRL_Initialize() is empty in your plib_clock.c */
 
-    /* OSC32KCTRL_Initialize(): */
-    OSC32KCTRL_REGS->OSC32KCTRL_RTCCTRL = OSC32KCTRL_RTCCTRL_RTCSEL(0);
-
     /* DFLL_Initialize() is empty in your plib_clock.c */
 
     /* GCLK2_Initialize(): GEN2 = SRC(6) / 48 */

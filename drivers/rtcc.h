@@ -1,17 +1,16 @@
 /*
- * Real-Time Clock/Calendar (RTCC) bare‑metal driver for SAME54
+ * Real-Time Clock/Calendar (RTCC) bare-metal driver for SAME54
  *
- * This module provides a minimalist interface to configure and use the
- * RTC peripheral in MODE2 (calendar clock) using CMSIS/DFP register
- * definitions.  It assumes that the 32.768 kHz crystal (XOSC32K) has been
- * enabled and routed to Generic Clock Generator 1, and that GCLK1 is
- * connected to the RTC peripheral (e.g. via SystemConfigPerformance()).
+ * This module configures and uses the RTC peripheral in MODE2 (calendar clock)
+ * using the SAME54 DFP register model (*_REGS pointers).
  *
- * All time/date fields are handled in binary form; internal registers use
- * packed BCD, so the driver performs BCD conversion automatically.
+ * Clocking:
+ * - RTCC_Init() enables OSC32KCTRL + RTC clocks
+ * - Optionally enables XOSC32K and selects OSC32KCTRL_RTCCTRL.RTCSEL
  *
- * Copyright (c) 2025 Han.  All rights reserved.
+ * Date/time fields are handled in binary form (no BCD conversion in this driver).
  */
+
 
 #ifndef RTCC_H
 #define RTCC_H

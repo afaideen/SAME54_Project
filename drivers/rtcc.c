@@ -1,15 +1,16 @@
 /*
- * Real-Time Clock/Calendar (RTCC) bare‑metal driver implementation.
+ * Real-Time Clock/Calendar (RTCC) bare-metal driver for SAME54
  *
- * See rtcc.h for high‑level description.  This implementation uses the
- * CMSIS Device Family Pack (DFP) definitions for the SAME54 family and
- * operates directly on the RTC MODE2 registers.
+ * This module configures and uses the RTC peripheral in MODE2 (calendar clock)
+ * using the SAME54 DFP register model (*_REGS pointers).
  *
- * It assumes that the clock tree has already been configured such that
- * GCLK1 (driven from the 32.768 kHz crystal) is connected to the RTC
- * peripheral (see SystemConfigPerformance()).
+ * Clocking:
+ * - RTCC_Init() enables OSC32KCTRL + RTC clocks
+ * - Optionally enables XOSC32K and selects OSC32KCTRL_RTCCTRL.RTCSEL
+ *
+ * Date/time fields are handled in binary form (no BCD conversion in this driver).
  */
-#include <stdarg.h>
+
 #include <stdio.h>
 #include "sam.h"
 #include "rtcc.h"
@@ -156,6 +157,14 @@ bool RTCC_GetDateTime(rtcc_datetime_t *dt)
 
     uint8_t y = (uint8_t)((c1 & RTC_MODE2_CLOCK_YEAR_Msk)   >> RTC_MODE2_CLOCK_YEAR_Pos);
     dt->year  = year_from_hw(y);
+
+    /* Reject not-set / invalid values (prevents 2000-00-00 00:00:00) */
+    if (dt->month < 1U || dt->month > 12U) return false;
+    if (dt->day   < 1U || dt->day   > 31U) return false;
+    if (dt->hour  > 23U) return false;
+    if (dt->min   > 59U) return false;
+    if (dt->sec   > 59U) return false;
+    if (dt->year  < 2000U || dt->year > 2063U) return false;
 
     return true;
 }
