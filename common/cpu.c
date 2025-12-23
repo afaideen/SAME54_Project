@@ -187,6 +187,12 @@ void SystemConfigPerformance(void)
     MCLK_REGS->MCLK_APBAMASK = 0x000007FFu;
     MCLK_REGS->MCLK_APBBMASK = 0x00018656u;
     
+    /* Enable DWT cycle counter (used for us-resolution delta timing) */
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
+    
     RTCC_ForceOffAtBoot();
 }
 

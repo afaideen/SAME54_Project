@@ -59,7 +59,7 @@ static volatile uint8_t dma_log_count = 0; /* items in queue */
 static volatile uint32_t dma_log_dropped = 0; /* monotonic drop counter */
 
 /* Timestamp state for logging */
-static uint32_t s_uart2_log_prev_ms = 0;
+static uint32_t s_uart2_log_prev_cyc = 0;
 static bool s_uart2_log_prev_valid = false;
 
 
@@ -249,7 +249,7 @@ void UART2_DMA_Init(void)
 {
     UART2_Init();
     /* Initialize timestamp baseline for log prefixes */
-    s_uart2_log_prev_ms = millis();
+    s_uart2_log_prev_cyc  = millis();
     s_uart2_log_prev_valid = false;
 
     /* Enable DMAC peripheral clock */
@@ -375,10 +375,18 @@ static bool UART2_DMA_Log_internal(const char *fmt, va_list ap)
     }
 
     /* Timestamp prefix */
-    uint32_t now = millis();
-    uint32_t delta = s_uart2_log_prev_valid ? (now - s_uart2_log_prev_ms) : 0U;
-    s_uart2_log_prev_ms = now;
+    uint32_t now_ms = millis();
+
+    uint32_t now_cyc = DWT->CYCCNT;
+    uint32_t delta_cyc = s_uart2_log_prev_valid ? (now_cyc - s_uart2_log_prev_cyc) : 0U;
+    s_uart2_log_prev_cyc = now_cyc;
     s_uart2_log_prev_valid = true;
+
+    /* Convert cycles -> microseconds using CPU_CLOCK_HZ (board.h) */
+    uint32_t delta_us = (uint32_t)(((uint64_t)delta_cyc * 1000000ULL) / (uint64_t)CPU_CLOCK_HZ);
+    uint32_t delta_ms_i = delta_us / 1000U;
+    uint32_t delta_us_rem = delta_us % 1000U;
+
 
     /* Compose final message: [TIME_MS][DELTA_MS] + body */
     char tmp[DMA_LOG_BUF_SIZE];
@@ -388,13 +396,21 @@ static bool UART2_DMA_Log_internal(const char *fmt, va_list ap)
     int n;
     if (have_dt)
     {
-        n = snprintf(tmp, sizeof(tmp), "[%s][%lu][%lu]%s",
-                     dt_str, (unsigned long)now, (unsigned long)delta, body);
+        n = snprintf(tmp, sizeof(tmp), "[%s][%lu][%lu.%03lu]%s",
+             dt_str,
+             (unsigned long)now_ms,
+             (unsigned long)delta_ms_i,
+             (unsigned long)delta_us_rem,
+             body);
+
     }
     else
     {
-        n = snprintf(tmp, sizeof(tmp), "[----][%lu][%lu]%s",
-                     (unsigned long)now, (unsigned long)delta, body);
+        n = snprintf(tmp, sizeof(tmp), "[----][%lu][%lu.%03lu]%s",
+                     (unsigned long)now_ms,
+                     (unsigned long)delta_ms_i,
+                     (unsigned long)delta_us_rem,
+                     body);
     }
 
     if (n <= 0) {
