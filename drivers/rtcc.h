@@ -13,36 +13,38 @@
  * Copyright (c) 2025 Han.  All rights reserved.
  */
 
-#ifndef RTC_CALENDAR_H
-#define RTC_CALENDAR_H
+#ifndef RTCC_H
+#define RTCC_H
 
 #include <stdint.h>
-#include "sam.h"
-#include "instance/rtc.h"
+#include <stdbool.h>
 
-/* Calendar time structure (binary, not BCD) */
+/* SAME54 RTC MODE2: YEAR field is 0..63 => 2000..2063 */
 typedef struct
 {
-    uint8_t sec;    /* 0?59 */
-    uint8_t min;    /* 0?59 */
-    uint8_t hour;   /* 0?23 */
-    uint8_t day;    /* 1?31 */
-    uint8_t month;  /* 1?12 */
-    uint8_t year;   /* 0?99 (2000?2099) */
-} rtc_time_t;
+    uint16_t year;   /* full year, e.g. 2025 */
+    uint8_t  month;  /* 1..12 */
+    uint8_t  day;    /* 1..31 */
+    uint8_t  hour;   /* 0..23 */
+    uint8_t  min;    /* 0..59 */
+    uint8_t  sec;    /* 0..59 */
+} rtcc_datetime_t;
 
-/* Initialize RTC in MODE2 (calendar clock) */
-void RTC_CalendarInit(void);
-void RTC_Clock_32kHz_Init(void);
+/*
+ * RTCC driver uses RTC MODE2 (Clock/Calendar).
+ * Time/date fields are handled as binary values (RTC_CLOCK fields are binary).
+ *
+ * RTCC_Init() configures:
+ * - APBA clocks for OSC32KCTRL + RTC
+ * - selects RTC clock source via OSC32KCTRL_RTCCTRL
+ * - resets RTC and configures MODE2 with 1 Hz tick (1 kHz / 1024)
+ */
+void RTCC_Init(void);
+bool RTCC_SetDateTime(const rtcc_datetime_t *dt);
+bool RTCC_GetDateTime(rtcc_datetime_t *dt);
 
-/* Set calendar time/date (binary input) */
-void RTC_CalendarSet(const rtc_time_t *t);
+#endif
 
-/* Get calendar time/date (binary output) */
-void RTC_CalendarGet(rtc_time_t *t);
 
-/* Read raw MODE2 CLOCK register (BCD packed) */
-uint32_t RTC_CalendarRaw(void);
 
-#endif /* RTC_CALENDAR_H */
 

@@ -31,7 +31,7 @@ void board_init(void)
 
     /* Initialize the UART peripheral (SERCOM2) first, then DMA */    
     UART2_DMA_Init();
-    RTC_CalendarInit();
+    RTCC_Init();
 }
 
 /**

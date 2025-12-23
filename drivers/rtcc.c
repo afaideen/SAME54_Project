@@ -9,109 +9,152 @@
  * GCLK1 (driven from the 32.768 kHz crystal) is connected to the RTC
  * peripheral (see SystemConfigPerformance()).
  */
+#include <stdarg.h>
 #include <stdio.h>
+#include "sam.h"
 #include "rtcc.h"
 
-#include "rtcc.h"
+/* Guards */
+#if !defined(MCLK_REGS) || !defined(OSC32KCTRL_REGS) || !defined(RTC_REGS)
+#error "Header model mismatch: expected SAME54 DFP with *_REGS pointers."
+#endif
 
+/* Choose RTC clock source:
+ * - XOSC1K: uses external 32.768kHz crystal?s 1kHz output (more accurate)
+ * - ULP1K : uses internal ultra-low-power 1kHz (works without crystal)
+ */
+#ifndef RTCC_RTCCTRL_SEL
+#define RTCC_RTCCTRL_SEL   OSC32KCTRL_RTCCTRL_RTCSEL_XOSC1K
+/* #define RTCC_RTCCTRL_SEL OSC32KCTRL_RTCCTRL_RTCSEL_ULP1K */
+#endif
 
-/* ---------- BCD helpers ---------- */
-
-static inline uint8_t bin2bcd(uint8_t v)
+static inline void rtc_mode2_wait_sync(uint32_t mask)
 {
-    return (uint8_t)(((v / 10) << 4) | (v % 10));
+    while ((RTC_REGS->MODE2.RTC_SYNCBUSY & mask) != 0U) { }
 }
 
-static inline uint8_t bcd2bin(uint8_t v)
+static inline uint8_t year_to_hw(uint16_t year)
 {
-    return (uint8_t)(((v >> 4) * 10) + (v & 0x0F));
+    if (year < 2000U) return 0U;
+    if (year > 2063U) return 63U;
+    return (uint8_t)(year - 2000U);
 }
 
-/* ---------- RTC Calendar ---------- */
-void RTC_Clock_32kHz_Init(void)
+static inline uint16_t year_from_hw(uint8_t hw_year)
 {
-    /* Enable clocks for OSC32KCTRL + RTC */
-    MCLK_REGS->MCLK_APBAMASK |= (MCLK_APBAMASK_OSC32KCTRL_Msk | MCLK_APBAMASK_RTC_Msk);
+    return (uint16_t)(2000U + (uint16_t)(hw_year & 0x3FU));
+}
 
-    /* Enable external 32.768 kHz crystal */
-    OSC32KCTRL_REGS->OSC32KCTRL_XOSC32K =
-        OSC32KCTRL_XOSC32K_ENABLE_Msk |
-        OSC32KCTRL_XOSC32K_XTALEN_Msk |
-        OSC32KCTRL_XOSC32K_EN32K_Msk |
-        OSC32KCTRL_XOSC32K_RUNSTDBY_Msk |
-        OSC32KCTRL_XOSC32K_STARTUP_CYCLE32768;
+void RTCC_Init(void)
+{
+    /* Enable bus clocks */
+    MCLK_REGS->MCLK_APBAMASK |= (MCLK_APBAMASK_OSC32KCTRL_Msk |
+                                MCLK_APBAMASK_RTC_Msk);
 
-    /* Run continuously (not on-demand) */
-    OSC32KCTRL_REGS->OSC32KCTRL_XOSC32K &= (uint16_t)~OSC32KCTRL_XOSC32K_ONDEMAND_Msk;
-
-    while ((OSC32KCTRL_REGS->OSC32KCTRL_STATUS & OSC32KCTRL_STATUS_XOSC32KRDY_Msk) == 0U)
+    /* If we intend to use XOSC1K, ensure XOSC32K is enabled + EN1K */
+    if ((RTCC_RTCCTRL_SEL & OSC32KCTRL_RTCCTRL_RTCSEL_Msk) ==
+        OSC32KCTRL_RTCCTRL_RTCSEL_XOSC1K)
     {
-        /* wait for XOSC32K ready */
+        uint16_t x = OSC32KCTRL_REGS->OSC32KCTRL_XOSC32K;
+
+        x |= (uint16_t)(OSC32KCTRL_XOSC32K_ENABLE_Msk |
+                        OSC32KCTRL_XOSC32K_XTALEN_Msk |
+                        OSC32KCTRL_XOSC32K_EN1K_Msk |
+                        OSC32KCTRL_XOSC32K_STARTUP_CYCLE32768);
+
+        x &= (uint16_t)~OSC32KCTRL_XOSC32K_ONDEMAND_Msk; /* keep running */
+
+        OSC32KCTRL_REGS->OSC32KCTRL_XOSC32K = x;
+
+        while ((OSC32KCTRL_REGS->OSC32KCTRL_STATUS &
+                OSC32KCTRL_STATUS_XOSC32KRDY_Msk) == 0U)
+        {
+            /* wait */
+        }
     }
 
-    /* Select XOSC32K as RTC clock source */
-    OSC32KCTRL_REGS->OSC32KCTRL_RTCCTRL = OSC32KCTRL_RTCCTRL_RTCSEL_XOSC32K;
-}
+    /* Select RTC clock source (1kHz domain) */
+    OSC32KCTRL_REGS->OSC32KCTRL_RTCCTRL = RTCC_RTCCTRL_SEL;
 
-void RTC_CalendarInit(void)
-{
-    /* 1) Bring up / select 32k source for RTC (bundled as you requested) */
-    RTC_Clock_32kHz_Init();
-
-    /* 2) Enable RTC bus clock (safe even if already enabled) */
-    MCLK_REGS->MCLK_APBAMASK |= MCLK_APBAMASK_RTC_Msk;
-
-    /* 3) Reset RTC (MODE2 calendar) */
-    RTC_REGS->MODE2.RTC_CTRLA = RTC_MODE2_CTRLA_SWRST_Msk;
-    while (RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_SWRST_Msk) {}
-
-    /* 4) Disable before configuration */
+    /* Disable before reset/config */
     RTC_REGS->MODE2.RTC_CTRLA &= (uint16_t)~RTC_MODE2_CTRLA_ENABLE_Msk;
-    while (RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_ENABLE_Msk) {}
+    while ((RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_ENABLE_Msk) != 0U) { }
 
-    /* 5) Wait for clock sync to stop (won't hang now because RTCSEL is set) */
-    while (RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_CLOCK_Msk) {}
+    /* Software reset */
+    RTC_REGS->MODE2.RTC_CTRLA = RTC_MODE2_CTRLA_SWRST_Msk;
+    while ((RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_SWRST_Msk) != 0U) { }
 
-    /* 6) Configure: MODE2 clock + prescaler */
+    /* MODE2 Clock/Calendar, prescaler /1024 => 1 Hz from 1kHz source, stable reads */
     RTC_REGS->MODE2.RTC_CTRLA =
-        (uint16_t)(RTC_MODE2_CTRLA_MODE_CLOCK |
-                   RTC_MODE2_CTRLA_PRESCALER_DIV1024);
+          RTC_MODE2_CTRLA_MODE_CLOCK
+        | RTC_MODE2_CTRLA_PRESCALER_DIV1024
+        | RTC_MODE2_CTRLA_CLOCKSYNC_Msk;
 
-    /* 7) Enable RTC */
+    /* Enable RTC */
     RTC_REGS->MODE2.RTC_CTRLA |= RTC_MODE2_CTRLA_ENABLE_Msk;
-    while (RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_ENABLE_Msk) {}
+    while ((RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_ENABLE_Msk) != 0U) { }
 }
 
-void RTC_CalendarSet(const rtc_time_t *t)
+bool RTCC_SetDateTime(const rtcc_datetime_t *dt)
 {
-    uint32_t clk = 0;
+    if (dt == NULL) return false;
+    if (dt->year  < 2000U || dt->year > 2063U) return false;
+    if (dt->month < 1U || dt->month > 12U) return false;
+    if (dt->day   < 1U || dt->day   > 31U) return false;
+    if (dt->hour  > 23U) return false;
+    if (dt->min   > 59U) return false;
+    if (dt->sec   > 59U) return false;
 
-    clk |= RTC_MODE2_CLOCK_SECOND(bin2bcd(t->sec));
-    clk |= RTC_MODE2_CLOCK_MINUTE(bin2bcd(t->min));
-    clk |= RTC_MODE2_CLOCK_HOUR(bin2bcd(t->hour));
-    clk |= RTC_MODE2_CLOCK_DAY(bin2bcd(t->day));
-    clk |= RTC_MODE2_CLOCK_MONTH(bin2bcd(t->month));
-    clk |= RTC_MODE2_CLOCK_YEAR(bin2bcd(t->year));
+    /* Disable before write */
+    RTC_REGS->MODE2.RTC_CTRLA &= (uint16_t)~RTC_MODE2_CTRLA_ENABLE_Msk;
+    rtc_mode2_wait_sync(RTC_MODE2_SYNCBUSY_ENABLE_Msk);
 
-    RTC_REGS->MODE2.RTC_CLOCK = clk;
+    /* Write CLOCK fields (binary) */
+    RTC_REGS->MODE2.RTC_CLOCK =
+          RTC_MODE2_CLOCK_SECOND(dt->sec)
+        | RTC_MODE2_CLOCK_MINUTE(dt->min)
+        | RTC_MODE2_CLOCK_HOUR(dt->hour)
+        | RTC_MODE2_CLOCK_DAY(dt->day)
+        | RTC_MODE2_CLOCK_MONTH(dt->month)
+        | RTC_MODE2_CLOCK_YEAR(year_to_hw(dt->year));
+
+    rtc_mode2_wait_sync(RTC_MODE2_SYNCBUSY_CLOCK_Msk);
+
+    /* Re-enable */
+    RTC_REGS->MODE2.RTC_CTRLA |= RTC_MODE2_CTRLA_ENABLE_Msk;
+    rtc_mode2_wait_sync(RTC_MODE2_SYNCBUSY_ENABLE_Msk);
+
+    return true;
 }
 
-void RTC_CalendarGet(rtc_time_t *t)
+bool RTCC_GetDateTime(rtcc_datetime_t *dt)
 {
-    uint32_t clk = RTC_REGS->MODE2.RTC_CLOCK;
+    if (dt == NULL) return false;
 
-    t->sec   = bcd2bin((clk & RTC_MODE2_CLOCK_SECOND_Msk) >> RTC_MODE2_CLOCK_SECOND_Pos);
-    t->min   = bcd2bin((clk & RTC_MODE2_CLOCK_MINUTE_Msk) >> RTC_MODE2_CLOCK_MINUTE_Pos);
-    t->hour  = bcd2bin((clk & RTC_MODE2_CLOCK_HOUR_Msk)   >> RTC_MODE2_CLOCK_HOUR_Pos);
-    t->day   = bcd2bin((clk & RTC_MODE2_CLOCK_DAY_Msk)    >> RTC_MODE2_CLOCK_DAY_Pos);
-    t->month = bcd2bin((clk & RTC_MODE2_CLOCK_MONTH_Msk)  >> RTC_MODE2_CLOCK_MONTH_Pos);
-    t->year  = bcd2bin((clk & RTC_MODE2_CLOCK_YEAR_Msk)   >> RTC_MODE2_CLOCK_YEAR_Pos);
+    /* With CLOCKSYNC enabled: wait until CLOCK is synchronized before reading */
+    rtc_mode2_wait_sync(RTC_MODE2_SYNCBUSY_CLOCK_Msk);
+
+    /* Double-read to avoid rollover edge */
+    uint32_t c1, c2;
+    do {
+        c1 = RTC_REGS->MODE2.RTC_CLOCK;
+        c2 = RTC_REGS->MODE2.RTC_CLOCK;
+    } while (c1 != c2);
+
+    dt->sec   = (uint8_t)((c1 & RTC_MODE2_CLOCK_SECOND_Msk) >> RTC_MODE2_CLOCK_SECOND_Pos);
+    dt->min   = (uint8_t)((c1 & RTC_MODE2_CLOCK_MINUTE_Msk) >> RTC_MODE2_CLOCK_MINUTE_Pos);
+    dt->hour  = (uint8_t)((c1 & RTC_MODE2_CLOCK_HOUR_Msk)   >> RTC_MODE2_CLOCK_HOUR_Pos);
+    dt->day   = (uint8_t)((c1 & RTC_MODE2_CLOCK_DAY_Msk)    >> RTC_MODE2_CLOCK_DAY_Pos);
+    dt->month = (uint8_t)((c1 & RTC_MODE2_CLOCK_MONTH_Msk)  >> RTC_MODE2_CLOCK_MONTH_Pos);
+
+    uint8_t y = (uint8_t)((c1 & RTC_MODE2_CLOCK_YEAR_Msk)   >> RTC_MODE2_CLOCK_YEAR_Pos);
+    dt->year  = year_from_hw(y);
+
+    return true;
 }
 
-uint32_t RTC_CalendarRaw(void)
-{
-    return RTC_REGS->MODE2.RTC_CLOCK;
-}
+
+
 
 
 
