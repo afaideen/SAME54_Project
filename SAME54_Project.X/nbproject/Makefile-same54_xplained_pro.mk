@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../common/board.c ../common/delay.c ../common/systick.c ../common/cpu.c ../drivers/uart.c ../common/user_row.c ../main_uart_dma.c ../drivers/uart_dma.c
+SOURCEFILES_QUOTED_IF_SPACED=../common/board.c ../common/delay.c ../common/systick.c ../common/cpu.c ../drivers/uart.c ../drivers/uart_dma.c ../common/user_row.c ../main_uart_dma.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1270477542/board.o ${OBJECTDIR}/_ext/1270477542/delay.o ${OBJECTDIR}/_ext/1270477542/systick.o ${OBJECTDIR}/_ext/1270477542/cpu.o ${OBJECTDIR}/_ext/239857660/uart.o ${OBJECTDIR}/_ext/1270477542/user_row.o ${OBJECTDIR}/_ext/1472/main_uart_dma.o ${OBJECTDIR}/_ext/239857660/uart_dma.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1270477542/board.o.d ${OBJECTDIR}/_ext/1270477542/delay.o.d ${OBJECTDIR}/_ext/1270477542/systick.o.d ${OBJECTDIR}/_ext/1270477542/cpu.o.d ${OBJECTDIR}/_ext/239857660/uart.o.d ${OBJECTDIR}/_ext/1270477542/user_row.o.d ${OBJECTDIR}/_ext/1472/main_uart_dma.o.d ${OBJECTDIR}/_ext/239857660/uart_dma.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1270477542/board.o ${OBJECTDIR}/_ext/1270477542/delay.o ${OBJECTDIR}/_ext/1270477542/systick.o ${OBJECTDIR}/_ext/1270477542/cpu.o ${OBJECTDIR}/_ext/239857660/uart.o ${OBJECTDIR}/_ext/239857660/uart_dma.o ${OBJECTDIR}/_ext/1270477542/user_row.o ${OBJECTDIR}/_ext/1472/main_uart_dma.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1270477542/board.o.d ${OBJECTDIR}/_ext/1270477542/delay.o.d ${OBJECTDIR}/_ext/1270477542/systick.o.d ${OBJECTDIR}/_ext/1270477542/cpu.o.d ${OBJECTDIR}/_ext/239857660/uart.o.d ${OBJECTDIR}/_ext/239857660/uart_dma.o.d ${OBJECTDIR}/_ext/1270477542/user_row.o.d ${OBJECTDIR}/_ext/1472/main_uart_dma.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1270477542/board.o ${OBJECTDIR}/_ext/1270477542/delay.o ${OBJECTDIR}/_ext/1270477542/systick.o ${OBJECTDIR}/_ext/1270477542/cpu.o ${OBJECTDIR}/_ext/239857660/uart.o ${OBJECTDIR}/_ext/1270477542/user_row.o ${OBJECTDIR}/_ext/1472/main_uart_dma.o ${OBJECTDIR}/_ext/239857660/uart_dma.o
+OBJECTFILES=${OBJECTDIR}/_ext/1270477542/board.o ${OBJECTDIR}/_ext/1270477542/delay.o ${OBJECTDIR}/_ext/1270477542/systick.o ${OBJECTDIR}/_ext/1270477542/cpu.o ${OBJECTDIR}/_ext/239857660/uart.o ${OBJECTDIR}/_ext/239857660/uart_dma.o ${OBJECTDIR}/_ext/1270477542/user_row.o ${OBJECTDIR}/_ext/1472/main_uart_dma.o
 
 # Source Files
-SOURCEFILES=../common/board.c ../common/delay.c ../common/systick.c ../common/cpu.c ../drivers/uart.c ../common/user_row.c ../main_uart_dma.c ../drivers/uart_dma.c
+SOURCEFILES=../common/board.c ../common/delay.c ../common/systick.c ../common/cpu.c ../drivers/uart.c ../drivers/uart_dma.c ../common/user_row.c ../main_uart_dma.c
 
 # Pack Options 
 PACK_COMMON_OPTIONS=-I "${CMSIS_DIR}/CMSIS/Core/Include"
@@ -145,6 +145,13 @@ ${OBJECTDIR}/_ext/239857660/uart.o: ../drivers/uart.c  nbproject/Makefile-${CND_
 	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart.o.d" -o ${OBJECTDIR}/_ext/239857660/uart.o ../drivers/uart.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
+${OBJECTDIR}/_ext/239857660/uart_dma.o: ../drivers/uart_dma.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
+	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o.d 
+	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" -o ${OBJECTDIR}/_ext/239857660/uart_dma.o ../drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
 ${OBJECTDIR}/_ext/1270477542/user_row.o: ../common/user_row.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
 	@${RM} ${OBJECTDIR}/_ext/1270477542/user_row.o.d 
@@ -158,13 +165,6 @@ ${OBJECTDIR}/_ext/1472/main_uart_dma.o: ../main_uart_dma.c  nbproject/Makefile-$
 	@${RM} ${OBJECTDIR}/_ext/1472/main_uart_dma.o 
 	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1472/main_uart_dma.o.d" -o ${OBJECTDIR}/_ext/1472/main_uart_dma.o ../main_uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main_uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
-	
-${OBJECTDIR}/_ext/239857660/uart_dma.o: ../drivers/uart_dma.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o.d 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" -o ${OBJECTDIR}/_ext/239857660/uart_dma.o ../drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
 else
 ${OBJECTDIR}/_ext/1270477542/board.o: ../common/board.c  nbproject/Makefile-${CND_CONF}.mk
@@ -202,6 +202,13 @@ ${OBJECTDIR}/_ext/239857660/uart.o: ../drivers/uart.c  nbproject/Makefile-${CND_
 	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart.o.d" -o ${OBJECTDIR}/_ext/239857660/uart.o ../drivers/uart.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
+${OBJECTDIR}/_ext/239857660/uart_dma.o: ../drivers/uart_dma.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
+	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o.d 
+	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" -o ${OBJECTDIR}/_ext/239857660/uart_dma.o ../drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
 ${OBJECTDIR}/_ext/1270477542/user_row.o: ../common/user_row.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
 	@${RM} ${OBJECTDIR}/_ext/1270477542/user_row.o.d 
@@ -215,13 +222,6 @@ ${OBJECTDIR}/_ext/1472/main_uart_dma.o: ../main_uart_dma.c  nbproject/Makefile-$
 	@${RM} ${OBJECTDIR}/_ext/1472/main_uart_dma.o 
 	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1472/main_uart_dma.o.d" -o ${OBJECTDIR}/_ext/1472/main_uart_dma.o ../main_uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main_uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
-	
-${OBJECTDIR}/_ext/239857660/uart_dma.o: ../drivers/uart_dma.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o.d 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" -o ${OBJECTDIR}/_ext/239857660/uart_dma.o ../drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
 endif
 

@@ -14,8 +14,8 @@
 #define BOARD_DPLL0_FREQ      120000000UL
 
 /* === Only change this === */
-#define BOARD_CPU_CLOCK       120000000UL   /* or 120000000UL */
-//#define BOARD_CPU_CLOCK        60000000UL   /* or  60000000UL */
+//#define BOARD_CPU_CLOCK       120000000UL   /* or 120000000UL */
+#define BOARD_CPU_CLOCK        60000000UL   /* or  60000000UL */
 
 #define CPU_CLOCK_HZ          BOARD_CPU_CLOCK
 

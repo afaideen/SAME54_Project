@@ -1,3 +1,4 @@
+#include "uart.h"
 #include "uart_dma.h"
 #include "../common/board.h"
 #include <string.h>
@@ -5,6 +6,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+
+/* Timebase (must be provided by your project; typically SysTick 1ms) */
+extern uint32_t millis(void);
 
 /* ============================================================================
  * DMA Descriptor Tables (aligned per SAME54 requirement)
@@ -53,6 +57,11 @@ static volatile uint8_t dma_log_tail = 0; /* next free slot to push */
 static volatile uint8_t dma_log_count = 0; /* items in queue */
 static volatile uint32_t dma_log_dropped = 0; /* monotonic drop counter */
 
+/* Timestamp state for logging */
+static uint32_t s_uart2_log_prev_ms = 0;
+static bool s_uart2_log_prev_valid = false;
+
+
 /* Forward declarations for logger helpers */
 static void dma_log_start_next(void);
 static void uart_dma_queue_handler_local(void);
@@ -66,11 +75,8 @@ static void uart_dma_queue_handler_local(void);
  */
 static void dmac_enable(void)
 {
-    /* Enable DMAC on both the AHB and APBB buses.  The DMAC is an AHB
-     * master but its registers live on the APBB bus.  Failing to enable
-     * APBB will prevent register writes from taking effect. */
-    MCLK_REGS->MCLK_AHBMASK  |= MCLK_AHBMASK_DMAC_Msk;
-//    MCLK_REGS->MCLK_APBBMASK |= MCLK_APBBMASK_DMAC_Msk;
+    /* Harmony v3 enables the DMAC clock via MCLK_AHBMASK (DMAC is on AHB). */
+    MCLK_REGS->MCLK_AHBMASK |= MCLK_AHBMASK_DMAC_Msk;
 
     /* Read back to ensure the write has completed */
     (void)MCLK_REGS->MCLK_AHBMASK;
@@ -81,22 +87,26 @@ static void dmac_enable(void)
  */
 static void dmac_config(void)
 {
-    /* Perform a software reset to ensure the DMAC starts from a clean
-     * configuration.  Wait for the SWRST bit to clear before proceeding. */
-    DMAC_REGS->DMAC_CTRL = DMAC_CTRL_SWRST_Msk;
-    while ((DMAC_REGS->DMAC_CTRL & DMAC_CTRL_SWRST_Msk) != 0U)
-    {
-        /* wait for reset to complete */
-    }
-
-    /* Set descriptor and writeback base addresses */
+    /* (Harmony v3) Update the Base address and Write Back address register */
     DMAC_REGS->DMAC_BASEADDR = (uint32_t)dma_descriptors;
     DMAC_REGS->DMAC_WRBADDR  = (uint32_t)dma_writeback;
 
-    /* Enable DMAC: DMAENABLE=1, LVLEN=0xF (enable all four priority levels) */
-    DMAC_REGS->DMAC_CTRL =
-        DMAC_CTRL_DMAENABLE_Msk |
-        DMAC_CTRL_LVLEN(0xFU);
+    /* (Harmony v3) Update the Priority Control register:
+       - enable round-robin for all levels
+       - set each level priority number to 1 (doesn't matter for a single channel,
+         but keeps behavior identical to Harmony) */
+    DMAC_REGS->DMAC_PRICTRL0 |=
+        DMAC_PRICTRL0_LVLPRI0(1U) | DMAC_PRICTRL0_RRLVLEN0_Msk |
+        DMAC_PRICTRL0_LVLPRI1(1U) | DMAC_PRICTRL0_RRLVLEN1_Msk |
+        DMAC_PRICTRL0_LVLPRI2(1U) | DMAC_PRICTRL0_RRLVLEN2_Msk |
+        DMAC_PRICTRL0_LVLPRI3(1U) | DMAC_PRICTRL0_RRLVLEN3_Msk;
+
+    /* (Harmony v3) Enable DMAC + all priority levels */
+    DMAC_REGS->DMAC_CTRL = DMAC_CTRL_DMAENABLE_Msk |
+                           DMAC_CTRL_LVLEN0_Msk |
+                           DMAC_CTRL_LVLEN1_Msk |
+                           DMAC_CTRL_LVLEN2_Msk |
+                           DMAC_CTRL_LVLEN3_Msk;
 }
 
 /**
@@ -104,16 +114,29 @@ static void dmac_config(void)
  */
 static void dmac_channel_config(uint8_t channel)
 {
-    /* Configure trigger source and action for the given channel.  The SAME54
-     * DMAC exposes per-channel control registers via the CHANNEL[] array.
-     * Assign SERCOM2's TX trigger and request a transfer on each
-     * transaction (beat) completed. */
+    /* (Harmony v3) Configure DMA channel for SERCOM2 USART TX:
+       - TRIGSRC = SERCOM2 TX
+       - TRIGACT = BURST (one trigger per burst)
+       - BURSTLEN = 0 => burst length = 1 beat
+       - THRESHOLD = 0
+       NOTE: Using TRIGACT_TRANSACTION here will typically break peripheral-paced
+       transfers. Harmony uses TRIGACT = BURST. */
     DMAC_REGS->CHANNEL[channel].DMAC_CHCTRLA =
+        DMAC_CHCTRLA_TRIGACT_BURST |
         DMAC_CHCTRLA_TRIGSRC(SERCOM2_DMAC_ID_TX) |
-        DMAC_CHCTRLA_TRIGACT_TRANSACTION;
+        DMAC_CHCTRLA_THRESHOLD(0U) |
+        DMAC_CHCTRLA_BURSTLEN(0U);
 
-    /* Enable the transfer complete interrupt for this channel */
-    DMAC_REGS->CHANNEL[channel].DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL_Msk;
+    /* (Harmony v3) Channel priority level = 0 (matches DMAC_0 interrupt) */
+    DMAC_REGS->CHANNEL[channel].DMAC_CHPRILVL = DMAC_CHPRILVL_PRILVL(0U);
+
+    /* Enable transfer complete + error interrupts for this channel */
+    DMAC_REGS->CHANNEL[channel].DMAC_CHINTENSET =
+        (DMAC_CHINTENSET_TCMPL_Msk | DMAC_CHINTENSET_TERR_Msk);
+
+    /* Clear any stale flags */
+    DMAC_REGS->CHANNEL[channel].DMAC_CHINTFLAG =
+        (DMAC_CHINTFLAG_TCMPL_Msk | DMAC_CHINTFLAG_TERR_Msk);
 }
 
 /**
@@ -185,25 +208,32 @@ static void dmac_channel_disable(uint8_t channel)
 void DMAC_0_Handler(void)
 {
     uint8_t channel = UART2_DMA_CHANNEL;
+    uint8_t flags = DMAC_REGS->CHANNEL[channel].DMAC_CHINTFLAG;
 
-    /* Check for transfer complete on this channel.  We use the channel index
-     * directly rather than selecting via DMAC_CHID, which is not present on
-     * the SAME54 header model. */
-    if ((DMAC_REGS->CHANNEL[channel].DMAC_CHINTFLAG & DMAC_CHINTFLAG_TCMPL_Msk) != 0U)
+    /* Transfer complete */
+    if ((flags & DMAC_CHINTFLAG_TCMPL_Msk) != 0U)
     {
-        /* Clear the transfer complete flag */
         DMAC_REGS->CHANNEL[channel].DMAC_CHINTFLAG = DMAC_CHINTFLAG_TCMPL_Msk;
-
-        /* Mark DMA as idle */
         uart2_dma_busy = false;
 
-        /* Kick the internal logging queue to transmit the next message if
-         * one is available.  Without this call, the queue would stall
-         * after completing a single message. */
+        /* Start next queued log message (if any) */
         dma_log_start_next();
 
-        /* Call user callback if registered.  The callback may queue new
-         * messages; it is safe because uart2_dma_busy has been cleared. */
+        if (uart2_dma_callback != NULL)
+        {
+            uart2_dma_callback();
+        }
+    }
+
+    /* Transfer error */
+    if ((flags & DMAC_CHINTFLAG_TERR_Msk) != 0U)
+    {
+        DMAC_REGS->CHANNEL[channel].DMAC_CHINTFLAG = DMAC_CHINTFLAG_TERR_Msk;
+        uart2_dma_busy = false;
+
+        /* Drop current item already in-flight; try to continue queue */
+        dma_log_start_next();
+
         if (uart2_dma_callback != NULL)
         {
             uart2_dma_callback();
@@ -217,39 +247,59 @@ void DMAC_0_Handler(void)
 
 void UART2_DMA_Init(void)
 {
-    /* Enable DMAC peripheral */
+    /* Initialize timestamp baseline for log prefixes */
+    s_uart2_log_prev_ms = millis();
+    s_uart2_log_prev_valid = false;
+
+    /* Enable DMAC peripheral clock */
     dmac_enable();
 
-    /* Configure DMAC base settings */
+    /* Configure DMAC base settings (BASEADDR/WRBADDR/PRICTRL0/CTRL) */
     dmac_config();
 
     /* Configure the specific channel for UART2 TX */
     dmac_channel_config(UART2_DMA_CHANNEL);
 
-    /* Enable the interrupt for the DMAC priority level used by this channel.
-     * On SAME54, there is one interrupt per priority level (0â??3) rather
-     * than one per channel.  Our UART uses channel 0 on priority level 0. */
+    /* Enable the interrupt for DMAC priority level 0 (matches CHPRILVL=0) */
+    NVIC_ClearPendingIRQ(DMAC_0_IRQn);
     NVIC_EnableIRQ(DMAC_0_IRQn);
 }
 
 bool UART2_DMA_Send(const char *buffer, uint32_t length)
 {
+    uint8_t channel = UART2_DMA_CHANNEL;
+
+    if ((buffer == NULL) || (length == 0U))
+    {
+        return false;
+    }
+
+    /* SAME54 DMAC BTCNT is 16-bit. Keep each transfer within 65535 bytes. */
+    if (length > 0xFFFFU)
+    {
+        length = 0xFFFFU;
+    }
+
     /* Prevent starting transfer if one is already in progress */
     if (uart2_dma_busy)
     {
-        return false;  /* Transfer in progress, cannot start new one */
+        return false;
     }
+
+    /* Clear any stale flags before starting */
+    DMAC_REGS->CHANNEL[channel].DMAC_CHINTFLAG =
+        (DMAC_CHINTFLAG_TCMPL_Msk | DMAC_CHINTFLAG_TERR_Msk);
 
     /* Mark as busy before starting */
     uart2_dma_busy = true;
 
     /* Set up the DMA descriptor for this transfer */
-    dmac_setup_tx_descriptor(UART2_DMA_CHANNEL, buffer, length);
+    dmac_setup_tx_descriptor(channel, buffer, length);
 
     /* Start the DMA transfer */
-    dmac_channel_enable(UART2_DMA_CHANNEL);
+    dmac_channel_enable(channel);
 
-    return true;  /* Transfer successfully started */
+    return true;
 }
 
 bool UART2_DMA_IsBusy(void)
@@ -294,21 +344,37 @@ uint32_t UART2_DMA_Log_Dropped(void)
  */
 static bool UART2_DMA_Log_internal(const char *fmt, va_list ap)
 {
-    int n;
-    char tmp[DMA_LOG_BUF_SIZE];
-
-    n = vsnprintf(tmp, sizeof(tmp), fmt, ap);
-    if (n <= 0)
+    /* Build the user message first (consume va_list exactly once) */
+    char body[DMA_LOG_BUF_SIZE];
+    int bn = vsnprintf(body, sizeof(body), fmt, ap);
+    if (bn <= 0) {
         return false;
+    }
+
+    /* Timestamp prefix */
+    uint32_t now = millis();
+    uint32_t delta = s_uart2_log_prev_valid ? (now - s_uart2_log_prev_ms) : 0U;
+    s_uart2_log_prev_ms = now;
+    s_uart2_log_prev_valid = true;
+
+    /* Compose final message: [TIME_MS][DELTA_MS] + body */
+    char tmp[DMA_LOG_BUF_SIZE];
+    int n = snprintf(tmp, sizeof(tmp), "[%lu][%lu]%s",
+                     (unsigned long)now, (unsigned long)delta, body);
+    if (n <= 0) {
+        return false;
+    }
 
     uint16_t len = (uint16_t)n;
-    if (len >= sizeof(tmp))
-        len = sizeof(tmp) - 1;
+    if (len >= sizeof(tmp)) {
+        len = sizeof(tmp) - 1U;
+    }
 
-    /* Use the DMAC level 0 interrupt for all queue operations.  Adding
-     * UART2_DMA_CHANNEL to DMAC_0_IRQn would point at an invalid IRQ on
-     * SAME54, as there is one IRQ per priority level, not per channel. */
-    IRQn_Type dmac_irq = DMAC_0_IRQn;
+    /* If DMA is busy, queue message; else start immediately */
+    bool res;
+
+    /* Protect queue state from DMAC ISR races */
+    IRQn_Type dmac_irq = DMAC_0_IRQn; /* CHPRILVL=0 */
     NVIC_DisableIRQ(dmac_irq);
 
     if (dma_log_count >= DMA_LOG_QUEUE_SIZE) {
@@ -320,7 +386,7 @@ static bool UART2_DMA_Log_internal(const char *fmt, va_list ap)
     memcpy(dma_log_queue[dma_log_tail], tmp, len);
     dma_log_queue[dma_log_tail][len] = '\0';
     dma_log_len[dma_log_tail] = len;
-    dma_log_tail = (uint8_t)((dma_log_tail + 1) % DMA_LOG_QUEUE_SIZE);
+    dma_log_tail = (uint8_t)((dma_log_tail + 1U) % DMA_LOG_QUEUE_SIZE);
     dma_log_count++;
 
     if (!UART2_DMA_IsBusy()) {
@@ -328,7 +394,9 @@ static bool UART2_DMA_Log_internal(const char *fmt, va_list ap)
     }
 
     NVIC_EnableIRQ(dmac_irq);
-    return true;
+
+    res = true;
+    return res;
 }
 
 bool UART2_DMA_Log(const char *fmt, ...)
@@ -336,7 +404,12 @@ bool UART2_DMA_Log(const char *fmt, ...)
     bool res;
     va_list ap;
     va_start(ap, fmt);
-    res = UART2_DMA_Log_internal(fmt, ap);
+
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+    res = UART2_DMA_Log_internal(fmt, ap_copy);
+    va_end(ap_copy);
+
     va_end(ap);
     return res;
 }
