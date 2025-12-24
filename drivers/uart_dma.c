@@ -249,7 +249,8 @@ void UART2_DMA_Init(void)
 {
     UART2_Init();
     /* Initialize timestamp baseline for log prefixes */
-    s_uart2_log_prev_cyc  = millis();
+//    s_uart2_log_prev_cyc  = millis();
+    s_uart2_log_prev_cyc   = (uint32_t)DWT->CYCCNT;
     s_uart2_log_prev_valid = false;
 
     /* Enable DMAC peripheral clock */

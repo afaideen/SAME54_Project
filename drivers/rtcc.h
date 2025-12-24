@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
 /* SAME54 RTC MODE2: YEAR field is 0..63 => 2000..2063 */
 typedef struct
@@ -39,8 +40,13 @@ typedef struct
  * - resets RTC and configures MODE2 with 1 Hz tick (1 kHz / 1024)
  */
 void RTCC_Init(void);
+bool RTCC_IsEnabled(void);
+bool RTCC_TimeGet(struct tm *t);
+void RTCC_TimeSet(const struct tm *t);
 bool RTCC_SetDateTime(const rtcc_datetime_t *dt);
 bool RTCC_GetDateTime(rtcc_datetime_t *dt);
+void RTCC_SyncFromBuildTime(void);
+bool RTCC_FormatDateTime(char *out, uint32_t out_sz);
 
 #endif
 

@@ -1,6 +1,6 @@
 
 #include <stdio.h>
-
+#include <time.h>
 #include "board.h"
 #include "systick.h"
 #include "delay.h"
@@ -11,18 +11,27 @@
 /* Provided by your SysTick code */
 extern uint32_t millis(void);
 
+
 void FW_LogBanner(void)
 {
-    uint32_t ms = millis();
+    struct tm t;
 
     printf("\r\n================ FIRMWARE INFO ================\r\n");
     printf("Name           : %s\r\n", FW_NAME);
     printf("Version        : %s\r\n", FW_VERSION);
     printf("Build Date     : %s\r\n", __DATE__);
     printf("Build Time     : %s\r\n", __TIME__);
-    printf("Boot Time      : %lu ms since reset\r\n", ms);
+    char rtcc_str[32];
+    if (RTCC_FormatDateTime(rtcc_str, sizeof(rtcc_str))) {
+        printf("RTC Time       : %s\r\n", rtcc_str);
+    } else {
+        printf("RTC Time       : NOT VALID\r\n");
+    }
+
+    printf("Boot Time      : %lu ms since reset\r\n", millis());
     printf("===============================================\r\n\r\n");
 }
+
 
 /**
  * Initializes board peripherals including LED and button
@@ -51,8 +60,10 @@ void board_init(void)
     UART2_DMA_Init();
     #ifdef BOARD_ENABLE_RTCC
         RTCC_Init();
+        /* Sync RTCC once */
+        RTCC_SyncFromBuildTime();
     #endif
-
+    
     CPU_LogClockOverview();
     FW_LogBanner();  
 }
