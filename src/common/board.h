@@ -114,7 +114,44 @@
 // RTCC
 //-----------------------------------------------------------------------------
 #define BOARD_ENABLE_RTCC
+//-----------------------------------------------------------------------------
+// QSPI - N25Q256A
+//-----------------------------------------------------------------------------
 
+/* ------------------------------------------------------------------------- */
+/* QSPI memory mapping                                                     */
+/*
+ * On the SAM D5x/E5x family (including the SAME54), the external QSPI flash
+ * appears in the AHB address space when the QSPI controller is configured
+ * for serial memory mode.  CircuitPython’s port.c notes that the QSPI
+ * region spans 16 MiB starting at 0x04000000【752595409825279†L576-L581】.
+ * The memory map is therefore defined below for convenience.  If you
+ * attach a different size device you should adjust QSPI_AHB_SIZE to match.
+ */
+
+/** Base address of the QSPI memory region on the SAME54. */
+#define QSPI_AHB_BASE  ((uintptr_t)0x04000000U)
+
+/** Maximum size of the QSPI address space (16 MiB). */
+#define QSPI_AHB_SIZE  (16U * 1024U * 1024U)
+
+/* ------------------------------------------------------------------------- */
+/* Flash organisation                                                       */
+/*
+ * The Micron N25Q256A on the SAM E54 Xplained Pro contains 256 Mbit
+ * (32 MiB) of storage arranged as 64kB erase sectors and 256‑byte program
+ * pages.  These definitions are provided for convenience when allocating
+ * storage regions or computing alignments.
+ */
+
+/** Sector (erase block) size in bytes. */
+#define QSPI_FLASH_SECTOR_SIZE   (64U * 1024U)
+
+/** Page (program) size in bytes. */
+#define QSPI_FLASH_PAGE_SIZE     256U
+
+/** Total capacity of the on‑board N25Q256A flash (32 MiB). */
+#define QSPI_FLASH_CAPACITY      (32U * 1024U * 1024U)
 //-----------------------------------------------------------------------------
 // Variable type
 //-----------------------------------------------------------------------------

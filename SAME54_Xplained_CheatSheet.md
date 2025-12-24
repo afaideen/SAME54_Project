@@ -113,7 +113,19 @@
   - PA12 (RXD1), PA13 (RXD0), PA15 (RXER)
   - PC11 (MDC), PC12 (MDIO), PC20 (CRS_DV), PC21 (RESET)
   - PD12 (INT)
-- **QSPI Flash:** PA08 (IO0), PA09 (IO1), PA10 (IO2), PA11 (IO3), PB10 (SCK), PB11 (CS)
+- **QSPI Flash (External NOR):** Micron **N25Q256A**, **256 Mbit** (~32 MB), supports **XIP** via the SAME54 QSPI module.
+  - **Signal integrity note:** QSPI traces are routed ~**60 Ω**; set ATSAME54P20A QSPI I/O to **high drive**. Flash drive strength can be tuned in flash config registers to match the ~60 Ω routing.
+
+  **QSPI pin connections:**
+
+  | SAM E54 pin | Function | QSPI flash function | Shared functionality |
+  |---|---|---|---|
+  | PA08 | QIO0 | Slave In / IO0 | - |
+  | PA09 | QIO1 | Slave Out / IO1 | - |
+  | PA10 | QIO2 | Write Protect / IO2 | - |
+  | PA11 | QIO3 | Hold / IO3 | - |
+  | PB10 | QSCK | Clock | - |
+  | PB11 | QCS  | Chip Select | - |
 - **I²S:** PB16 (SCK0), PB17 (MCK0), PA22 (SDI), PA23 (FS1)
 
 ---
