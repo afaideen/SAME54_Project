@@ -1,9 +1,28 @@
+
+#include <stdio.h>
+
 #include "board.h"
 #include "systick.h"
 #include "delay.h"
 #include "cpu.h"
 #include "../drivers/uart_dma.h"
 #include "../drivers/rtcc.h"
+
+/* Provided by your SysTick code */
+extern uint32_t millis(void);
+
+void FW_LogBanner(void)
+{
+    uint32_t ms = millis();
+
+    printf("\r\n================ FIRMWARE INFO ================\r\n");
+    printf("Name           : %s\r\n", FW_NAME);
+    printf("Version        : %s\r\n", FW_VERSION);
+    printf("Build Date     : %s\r\n", __DATE__);
+    printf("Build Time     : %s\r\n", __TIME__);
+    printf("Boot Time      : %lu ms since reset\r\n", ms);
+    printf("===============================================\r\n\r\n");
+}
 
 /**
  * Initializes board peripherals including LED and button
@@ -33,6 +52,9 @@ void board_init(void)
     #ifdef BOARD_ENABLE_RTCC
         RTCC_Init();
     #endif
+
+    CPU_LogClockOverview();
+    FW_LogBanner();  
 }
 
 /**

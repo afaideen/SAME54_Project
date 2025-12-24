@@ -357,30 +357,94 @@ void SystemConfigPerformance(void)
     RTCC_ForceOffAtBoot();
 }
 
+
+
 void CPU_LogClockOverview(void)
 {
-    uint32_t cpu_hz   = CPU_CLOCK_HZ;
-    uint32_t gclk1_hz = CPU_CLOCK_HZ / GCLK1_DIVIDER;
+    /* ---------- Read hardware state ---------- */
+
+    uint32_t gclk0_src =
+        (GCLK_REGS->GCLK_GENCTRL[0] & GCLK_GENCTRL_SRC_Msk)
+        >> GCLK_GENCTRL_SRC_Pos;
+
+    const char *gclk0_src_str =
+        (gclk0_src == 7) ? "DPLL0" :
+        (gclk0_src == 6) ? "DFLL"  : "UNKNOWN";
+
+    uint32_t ldr =
+        (OSCCTRL_REGS->DPLL[0].OSCCTRL_DPLLRATIO &
+         OSCCTRL_DPLLRATIO_LDR_Msk) >>
+         OSCCTRL_DPLLRATIO_LDR_Pos;
+
+    uint32_t ldrfrac =
+        (OSCCTRL_REGS->DPLL[0].OSCCTRL_DPLLRATIO &
+         OSCCTRL_DPLLRATIO_LDRFRAC_Msk) >>
+         OSCCTRL_DPLLRATIO_LDRFRAC_Pos;
+    
+    /* --- Derive DPLL0 reference from GCLK2 --- */
+
+uint32_t gclk2_src =
+    (GCLK_REGS->GCLK_GENCTRL[2] & GCLK_GENCTRL_SRC_Msk)
+    >> GCLK_GENCTRL_SRC_Pos;
+
+uint32_t gclk2_div =
+    (GCLK_REGS->GCLK_GENCTRL[2] & GCLK_GENCTRL_DIV_Msk)
+    >> GCLK_GENCTRL_DIV_Pos;
+
+if (gclk2_div == 0)
+    gclk2_div = 1;
+
+/* Assume DFLL48M if SRC=6 (which matches your config) */
+double gclk2_hz = 0.0;
+
+if (gclk2_src == 6)  /* DFLL48M */
+{
+    gclk2_hz = (double)BOARD_DFLL48M_HZ / gclk2_div;
+}
+
+    double dpll0_hz = gclk2_hz * (ldr + 1.0 + (ldrfrac / 16.0));
+
+    uint32_t gclk0_div =
+        (GCLK_REGS->GCLK_GENCTRL[0] & GCLK_GENCTRL_DIV_Msk)
+        >> GCLK_GENCTRL_DIV_Pos;
+    if (gclk0_div == 0) gclk0_div = 1;
+
+    uint32_t cpu_div =
+        (MCLK_REGS->MCLK_CPUDIV & MCLK_CPUDIV_DIV_Msk)
+        >> MCLK_CPUDIV_DIV_Pos;
+    if (cpu_div == 0) cpu_div = 1;
+
+    double cpu_hz = (dpll0_hz / gclk0_div) / cpu_div;
+
+    uint32_t gclk1_div =
+        (GCLK_REGS->GCLK_GENCTRL[1] & GCLK_GENCTRL_DIV_Msk)
+        >> GCLK_GENCTRL_DIV_Pos;
+    if (gclk1_div == 0) gclk1_div = 1;
+
+    double gclk1_hz = dpll0_hz / gclk1_div;
+
+    uint32_t systick_reload = SysTick->LOAD + 1;
+    double systick_ms = (systick_reload * 1000.0) / cpu_hz;
+
+    int rtcc_enabled =
+        (RTC_REGS->MODE2.RTC_CTRLA & RTC_MODE2_CTRLA_ENABLE_Msk) ? 1 : 0;
+
+    /* ---------- PRINTF banner ---------- */
 
     printf("\r\n================ CLOCK OVERVIEW ================\r\n");
     printf("CPU Clock      : %.3f MHz\r\n", cpu_hz / 1e6);
-    printf("Source         : DPLL0\r\n");
-    printf("DPLL0 Ref      : GCLK2 (48 MHz)\r\n");
-
-    printf("DPLL0 Ratio    : LDR=%lu, LDRFRAC=%lu\r\n",
-                  (OSCCTRL_REGS->DPLL[0].OSCCTRL_DPLLRATIO & OSCCTRL_DPLLRATIO_LDR_Msk) >> OSCCTRL_DPLLRATIO_LDR_Pos,
-                  (OSCCTRL_REGS->DPLL[0].OSCCTRL_DPLLRATIO & OSCCTRL_DPLLRATIO_LDRFRAC_Msk) >> OSCCTRL_DPLLRATIO_LDRFRAC_Pos);
-
-    printf("GCLK0 Divider  : %lu\r\n", (uint32_t)GCLK0_DIVIDER);
-    printf("CPU Divider    : %lu\r\n", (uint32_t)CPU_DIVIDER);
-    printf("GCLK1 (Periph) : %.3f MHz (DIV=%lu)\r\n",
-                  gclk1_hz / 1e6, (uint32_t)GCLK1_DIVIDER);
-
-    printf("SysTick        : 1 ms tick\r\n");
+    printf("CPU Source     : %s\r\n", gclk0_src_str);
+    printf("DPLL0 Output   : %.3f MHz\r\n", dpll0_hz / 1e6);
+    printf("DPLL0 Ref      : %.3f MHz (GCLK2 = DFLL48M / %lu)\r\n", gclk2_hz / 1e6, gclk2_div);
+    printf("DPLL0 Ratio    : LDR=%lu, LDRFRAC=%lu\r\n", ldr, ldrfrac);
+    printf("GCLK0 Divider  : %lu\r\n", gclk0_div);
+    printf("CPU Divider    : %lu\r\n", cpu_div);
+    printf("GCLK1 (Periph) : %.3f MHz (DIV=%lu)\r\n", gclk1_hz / 1e6, gclk1_div);
+    printf("SysTick        : %.3f ms tick\r\n", systick_ms);
     printf("DWT CYCCNT     : %s\r\n",
-                  (DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk) ? "ENABLED" : "DISABLED");
-
-    printf("RTCC           : DISABLED at boot\r\n");
+           (DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk) ? "ENABLED" : "DISABLED");
+    printf("RTCC           : %s\r\n",
+           rtcc_enabled ? "ENABLED" : "DISABLED");
     printf("===============================================\r\n\r\n");
 }
 

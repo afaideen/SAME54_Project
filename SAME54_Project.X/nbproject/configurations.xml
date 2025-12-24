@@ -34,9 +34,8 @@
         <itemPath>../drivers/uart_dma.c</itemPath>
         <itemPath>../drivers/rtcc.c</itemPath>
       </logicalFolder>
-      <itemPath>../main.c</itemPath>
-      <itemPath>../main_uart_dma.c</itemPath>
       <itemPath>../main_uart.c</itemPath>
+      <itemPath>../main.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -90,7 +89,7 @@
         <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
         <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
       </makeCustomizationType>
-      <item path="../main.c" ex="true" overriding="false">
+      <item path="../main.c" ex="false" overriding="false">
         <C32>
         </C32>
         <C32-AR>
@@ -107,8 +106,6 @@
         </C32Global>
       </item>
       <item path="../main_uart.c" ex="true" overriding="false">
-      </item>
-      <item path="../main_uart_dma.c" ex="false" overriding="false">
         <C32>
         </C32>
         <C32-AR>

@@ -7,6 +7,21 @@
 
 
 //-----------------------------------------------------------------------------
+// Firmware version
+//-----------------------------------------------------------------------------
+#ifndef FW_VERSION_H
+#define FW_VERSION_H
+
+#define FW_NAME        "SAME54_BareMetal"
+#define FW_VERSION     "v1.0.0"
+
+/* Optional semantic breakdown */
+#define FW_VER_MAJOR   1
+#define FW_VER_MINOR   0
+#define FW_VER_PATCH   0
+
+#endif
+//-----------------------------------------------------------------------------
 // System Clock 
 //-----------------------------------------------------------------------------
 /* Board crystal + DPLL0 target */
@@ -18,6 +33,7 @@
 //#define BOARD_CPU_CLOCK        60000000UL   /* or  60000000UL */
 
 #define CPU_CLOCK_HZ          BOARD_CPU_CLOCK
+#define BOARD_DFLL48M_HZ        48000000UL
 
 /* CPU divider from DPLL0 */
 #define CPU_DIVIDER           (BOARD_DPLL0_FREQ / BOARD_CPU_CLOCK)
@@ -119,7 +135,7 @@ typedef struct {
 //-----------------------------------------------------------------------------
 // Prototypes
 //-----------------------------------------------------------------------------
-
+void FW_LogBanner(void);
 void board_init(void);
 bool board_led0_is_on(void);
 void board_led0_on(void);

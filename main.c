@@ -30,36 +30,32 @@ char banner[][100] = {
         "Hello from printf over SERCOM2 (DMA)!\r\n",
       	"System booted at %lu Hz\r\n",
     };
+/* Set initial date/time: 2025-12-23 15:30:00 */
+rtcc_datetime_t init_time =
+{
+    .year  = 2025,
+    .month = 12,
+    .day   = 23,
+    .hour  = 16,
+    .min   = 0,
+    .sec   = 0
+};
 int main(void)
 {    
     SystemConfigPerformance();
     board_init();
-    CPU_LogClockOverview();
+    
     /* Note: driver now manages its own queue and ISR; no registration needed */
     board_led0_on();
 
     /* Send initial messages over DMA */
-    UART2_DMA_Log(banner[0]);
-    
-    /* Set initial date/time: 2025-12-23 15:30:00 */
-    rtcc_datetime_t init_time =
-    {
-        .year  = 2025,
-        .month = 12,
-        .day   = 23,
-        .hour  = 16,
-        .min   = 0,
-        .sec   = 0
-    };
+//    UART2_DMA_Log(banner[0]);
 
-    RTCC_SetDateTime(&init_time);
+    RTCC_SetDateTime(&init_time);    
     
-    
-    UART2_DMA_Log(banner[1]);
-    UART2_DMA_Log(banner[2], BOARD_CPU_CLOCK);
+//    UART2_DMA_Log(banner[1]);
+//    UART2_DMA_Log(banner[2], BOARD_CPU_CLOCK);
     /* Return immediately from log calls; they are queued and sent by DMA */
-    
-    
 
     while (1) {
         static delay_t t_led = {0,500,0};
