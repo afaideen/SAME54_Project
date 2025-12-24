@@ -49,13 +49,9 @@ int main(void)
     board_led0_on();
 
     /* Send initial messages over DMA */
-//    UART2_DMA_Log(banner[0]);
+    UART2_DMA_Log(banner[0]);
 
-//    RTCC_SetDateTime(&init_time);    
-    
-//    UART2_DMA_Log(banner[1]);
-//    UART2_DMA_Log(banner[2], BOARD_CPU_CLOCK);
-    /* Return immediately from log calls; they are queued and sent by DMA */
+//    RTCC_SetDateTime(&init_time);   
 
     while (1) {
         static delay_t t_led = {0,500,0};

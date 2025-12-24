@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../common/board.c ../common/delay.c ../common/systick.c ../common/cpu.c ../drivers/uart.c ../drivers/uart_dma.c ../drivers/rtcc.c ../main.c
+SOURCEFILES_QUOTED_IF_SPACED=../src/main.c ../src/common/board.c ../src/common/cpu.c ../src/common/delay.c ../src/common/systick.c ../src/drivers/rtcc.c ../src/drivers/uart.c ../src/drivers/uart_dma.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1270477542/board.o ${OBJECTDIR}/_ext/1270477542/delay.o ${OBJECTDIR}/_ext/1270477542/systick.o ${OBJECTDIR}/_ext/1270477542/cpu.o ${OBJECTDIR}/_ext/239857660/uart.o ${OBJECTDIR}/_ext/239857660/uart_dma.o ${OBJECTDIR}/_ext/239857660/rtcc.o ${OBJECTDIR}/_ext/1472/main.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1270477542/board.o.d ${OBJECTDIR}/_ext/1270477542/delay.o.d ${OBJECTDIR}/_ext/1270477542/systick.o.d ${OBJECTDIR}/_ext/1270477542/cpu.o.d ${OBJECTDIR}/_ext/239857660/uart.o.d ${OBJECTDIR}/_ext/239857660/uart_dma.o.d ${OBJECTDIR}/_ext/239857660/rtcc.o.d ${OBJECTDIR}/_ext/1472/main.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1360937237/main.o ${OBJECTDIR}/_ext/394045403/board.o ${OBJECTDIR}/_ext/394045403/cpu.o ${OBJECTDIR}/_ext/394045403/delay.o ${OBJECTDIR}/_ext/394045403/systick.o ${OBJECTDIR}/_ext/1639450193/rtcc.o ${OBJECTDIR}/_ext/1639450193/uart.o ${OBJECTDIR}/_ext/1639450193/uart_dma.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1360937237/main.o.d ${OBJECTDIR}/_ext/394045403/board.o.d ${OBJECTDIR}/_ext/394045403/cpu.o.d ${OBJECTDIR}/_ext/394045403/delay.o.d ${OBJECTDIR}/_ext/394045403/systick.o.d ${OBJECTDIR}/_ext/1639450193/rtcc.o.d ${OBJECTDIR}/_ext/1639450193/uart.o.d ${OBJECTDIR}/_ext/1639450193/uart_dma.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1270477542/board.o ${OBJECTDIR}/_ext/1270477542/delay.o ${OBJECTDIR}/_ext/1270477542/systick.o ${OBJECTDIR}/_ext/1270477542/cpu.o ${OBJECTDIR}/_ext/239857660/uart.o ${OBJECTDIR}/_ext/239857660/uart_dma.o ${OBJECTDIR}/_ext/239857660/rtcc.o ${OBJECTDIR}/_ext/1472/main.o
+OBJECTFILES=${OBJECTDIR}/_ext/1360937237/main.o ${OBJECTDIR}/_ext/394045403/board.o ${OBJECTDIR}/_ext/394045403/cpu.o ${OBJECTDIR}/_ext/394045403/delay.o ${OBJECTDIR}/_ext/394045403/systick.o ${OBJECTDIR}/_ext/1639450193/rtcc.o ${OBJECTDIR}/_ext/1639450193/uart.o ${OBJECTDIR}/_ext/1639450193/uart_dma.o
 
 # Source Files
-SOURCEFILES=../common/board.c ../common/delay.c ../common/systick.c ../common/cpu.c ../drivers/uart.c ../drivers/uart_dma.c ../drivers/rtcc.c ../main.c
+SOURCEFILES=../src/main.c ../src/common/board.c ../src/common/cpu.c ../src/common/delay.c ../src/common/systick.c ../src/drivers/rtcc.c ../src/drivers/uart.c ../src/drivers/uart_dma.c
 
 # Pack Options 
 PACK_COMMON_OPTIONS=-I "${CMSIS_DIR}/CMSIS/Core/Include"
@@ -110,118 +110,118 @@ endif
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: compile
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/_ext/1270477542/board.o: ../common/board.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/board.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/board.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1270477542/board.o.d" -o ${OBJECTDIR}/_ext/1270477542/board.o ../common/board.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1270477542/board.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/1360937237/main.o: ../src/main.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1360937237" 
+	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1360937237/main.o.d" -o ${OBJECTDIR}/_ext/1360937237/main.o ../src/main.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1360937237/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/1270477542/delay.o: ../common/delay.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/delay.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/delay.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1270477542/delay.o.d" -o ${OBJECTDIR}/_ext/1270477542/delay.o ../common/delay.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1270477542/delay.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/394045403/board.o: ../src/common/board.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
+	@${RM} ${OBJECTDIR}/_ext/394045403/board.o.d 
+	@${RM} ${OBJECTDIR}/_ext/394045403/board.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/board.o.d" -o ${OBJECTDIR}/_ext/394045403/board.o ../src/common/board.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/board.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/1270477542/systick.o: ../common/systick.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/systick.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/systick.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1270477542/systick.o.d" -o ${OBJECTDIR}/_ext/1270477542/systick.o ../common/systick.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1270477542/systick.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/394045403/cpu.o: ../src/common/cpu.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
+	@${RM} ${OBJECTDIR}/_ext/394045403/cpu.o.d 
+	@${RM} ${OBJECTDIR}/_ext/394045403/cpu.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/cpu.o.d" -o ${OBJECTDIR}/_ext/394045403/cpu.o ../src/common/cpu.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/cpu.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/1270477542/cpu.o: ../common/cpu.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/cpu.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/cpu.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1270477542/cpu.o.d" -o ${OBJECTDIR}/_ext/1270477542/cpu.o ../common/cpu.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1270477542/cpu.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/394045403/delay.o: ../src/common/delay.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
+	@${RM} ${OBJECTDIR}/_ext/394045403/delay.o.d 
+	@${RM} ${OBJECTDIR}/_ext/394045403/delay.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/delay.o.d" -o ${OBJECTDIR}/_ext/394045403/delay.o ../src/common/delay.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/delay.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/239857660/uart.o: ../drivers/uart.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart.o.d 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart.o.d" -o ${OBJECTDIR}/_ext/239857660/uart.o ../drivers/uart.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/394045403/systick.o: ../src/common/systick.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
+	@${RM} ${OBJECTDIR}/_ext/394045403/systick.o.d 
+	@${RM} ${OBJECTDIR}/_ext/394045403/systick.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/systick.o.d" -o ${OBJECTDIR}/_ext/394045403/systick.o ../src/common/systick.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/systick.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/239857660/uart_dma.o: ../drivers/uart_dma.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o.d 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" -o ${OBJECTDIR}/_ext/239857660/uart_dma.o ../drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/1639450193/rtcc.o: ../src/drivers/rtcc.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1639450193" 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/rtcc.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/rtcc.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1639450193/rtcc.o.d" -o ${OBJECTDIR}/_ext/1639450193/rtcc.o ../src/drivers/rtcc.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1639450193/rtcc.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/239857660/rtcc.o: ../drivers/rtcc.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
-	@${RM} ${OBJECTDIR}/_ext/239857660/rtcc.o.d 
-	@${RM} ${OBJECTDIR}/_ext/239857660/rtcc.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/rtcc.o.d" -o ${OBJECTDIR}/_ext/239857660/rtcc.o ../drivers/rtcc.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/rtcc.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/1639450193/uart.o: ../src/drivers/uart.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1639450193" 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/uart.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/uart.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1639450193/uart.o.d" -o ${OBJECTDIR}/_ext/1639450193/uart.o ../src/drivers/uart.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1639450193/uart.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/1472/main.o: ../main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
-	@${RM} ${OBJECTDIR}/_ext/1472/main.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1472/main.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1472/main.o.d" -o ${OBJECTDIR}/_ext/1472/main.o ../main.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/1639450193/uart_dma.o: ../src/drivers/uart_dma.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1639450193" 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/uart_dma.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/uart_dma.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1639450193/uart_dma.o.d" -o ${OBJECTDIR}/_ext/1639450193/uart_dma.o ../src/drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1639450193/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
 else
-${OBJECTDIR}/_ext/1270477542/board.o: ../common/board.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/board.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/board.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1270477542/board.o.d" -o ${OBJECTDIR}/_ext/1270477542/board.o ../common/board.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1270477542/board.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/1360937237/main.o: ../src/main.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1360937237" 
+	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1360937237/main.o.d" -o ${OBJECTDIR}/_ext/1360937237/main.o ../src/main.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1360937237/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/1270477542/delay.o: ../common/delay.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/delay.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/delay.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1270477542/delay.o.d" -o ${OBJECTDIR}/_ext/1270477542/delay.o ../common/delay.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1270477542/delay.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/394045403/board.o: ../src/common/board.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
+	@${RM} ${OBJECTDIR}/_ext/394045403/board.o.d 
+	@${RM} ${OBJECTDIR}/_ext/394045403/board.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/board.o.d" -o ${OBJECTDIR}/_ext/394045403/board.o ../src/common/board.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/board.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/1270477542/systick.o: ../common/systick.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/systick.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/systick.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1270477542/systick.o.d" -o ${OBJECTDIR}/_ext/1270477542/systick.o ../common/systick.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1270477542/systick.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/394045403/cpu.o: ../src/common/cpu.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
+	@${RM} ${OBJECTDIR}/_ext/394045403/cpu.o.d 
+	@${RM} ${OBJECTDIR}/_ext/394045403/cpu.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/cpu.o.d" -o ${OBJECTDIR}/_ext/394045403/cpu.o ../src/common/cpu.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/cpu.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/1270477542/cpu.o: ../common/cpu.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1270477542" 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/cpu.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1270477542/cpu.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1270477542/cpu.o.d" -o ${OBJECTDIR}/_ext/1270477542/cpu.o ../common/cpu.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1270477542/cpu.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/394045403/delay.o: ../src/common/delay.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
+	@${RM} ${OBJECTDIR}/_ext/394045403/delay.o.d 
+	@${RM} ${OBJECTDIR}/_ext/394045403/delay.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/delay.o.d" -o ${OBJECTDIR}/_ext/394045403/delay.o ../src/common/delay.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/delay.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/239857660/uart.o: ../drivers/uart.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart.o.d 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart.o.d" -o ${OBJECTDIR}/_ext/239857660/uart.o ../drivers/uart.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/394045403/systick.o: ../src/common/systick.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
+	@${RM} ${OBJECTDIR}/_ext/394045403/systick.o.d 
+	@${RM} ${OBJECTDIR}/_ext/394045403/systick.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/systick.o.d" -o ${OBJECTDIR}/_ext/394045403/systick.o ../src/common/systick.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/systick.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/239857660/uart_dma.o: ../drivers/uart_dma.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o.d 
-	@${RM} ${OBJECTDIR}/_ext/239857660/uart_dma.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" -o ${OBJECTDIR}/_ext/239857660/uart_dma.o ../drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/1639450193/rtcc.o: ../src/drivers/rtcc.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1639450193" 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/rtcc.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/rtcc.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1639450193/rtcc.o.d" -o ${OBJECTDIR}/_ext/1639450193/rtcc.o ../src/drivers/rtcc.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1639450193/rtcc.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/239857660/rtcc.o: ../drivers/rtcc.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/239857660" 
-	@${RM} ${OBJECTDIR}/_ext/239857660/rtcc.o.d 
-	@${RM} ${OBJECTDIR}/_ext/239857660/rtcc.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/239857660/rtcc.o.d" -o ${OBJECTDIR}/_ext/239857660/rtcc.o ../drivers/rtcc.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/239857660/rtcc.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/1639450193/uart.o: ../src/drivers/uart.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1639450193" 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/uart.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/uart.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1639450193/uart.o.d" -o ${OBJECTDIR}/_ext/1639450193/uart.o ../src/drivers/uart.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1639450193/uart.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/_ext/1472/main.o: ../main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
-	@${RM} ${OBJECTDIR}/_ext/1472/main.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1472/main.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1472/main.o.d" -o ${OBJECTDIR}/_ext/1472/main.o ../main.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+${OBJECTDIR}/_ext/1639450193/uart_dma.o: ../src/drivers/uart_dma.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1639450193" 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/uart_dma.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1639450193/uart_dma.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1639450193/uart_dma.o.d" -o ${OBJECTDIR}/_ext/1639450193/uart_dma.o ../src/drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1639450193/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
 endif
 

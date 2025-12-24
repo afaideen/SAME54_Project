@@ -5,15 +5,15 @@
                    displayName="Header Files"
                    projectFiles="true">
       <logicalFolder name="f1" displayName="common" projectFiles="true">
-        <itemPath>../common/board.h</itemPath>
-        <itemPath>../common/delay.h</itemPath>
-        <itemPath>../common/systick.h</itemPath>
-        <itemPath>../common/cpu.h</itemPath>
+        <itemPath>../src/common/board.h</itemPath>
+        <itemPath>../src/common/cpu.h</itemPath>
+        <itemPath>../src/common/delay.h</itemPath>
+        <itemPath>../src/common/systick.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="drivers" projectFiles="true">
-        <itemPath>../drivers/uart.h</itemPath>
-        <itemPath>../drivers/uart_dma.h</itemPath>
-        <itemPath>../drivers/rtcc.h</itemPath>
+        <itemPath>../src/drivers/rtcc.h</itemPath>
+        <itemPath>../src/drivers/uart.h</itemPath>
+        <itemPath>../src/drivers/uart_dma.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -24,18 +24,17 @@
                    displayName="Source Files"
                    projectFiles="true">
       <logicalFolder name="f1" displayName="common" projectFiles="true">
-        <itemPath>../common/board.c</itemPath>
-        <itemPath>../common/delay.c</itemPath>
-        <itemPath>../common/systick.c</itemPath>
-        <itemPath>../common/cpu.c</itemPath>
+        <itemPath>../src/common/board.c</itemPath>
+        <itemPath>../src/common/cpu.c</itemPath>
+        <itemPath>../src/common/delay.c</itemPath>
+        <itemPath>../src/common/systick.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="drivers" projectFiles="true">
-        <itemPath>../drivers/uart.c</itemPath>
-        <itemPath>../drivers/uart_dma.c</itemPath>
-        <itemPath>../drivers/rtcc.c</itemPath>
+        <itemPath>../src/drivers/rtcc.c</itemPath>
+        <itemPath>../src/drivers/uart.c</itemPath>
+        <itemPath>../src/drivers/uart_dma.c</itemPath>
       </logicalFolder>
-      <itemPath>../main_uart.c</itemPath>
-      <itemPath>../main.c</itemPath>
+      <itemPath>../src/main.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -89,38 +88,6 @@
         <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
         <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
       </makeCustomizationType>
-      <item path="../main.c" ex="false" overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
-      <item path="../main_uart.c" ex="true" overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
       <C32>
         <property key="additional-warnings" value="false"/>
         <property key="addresss-attribute-use" value="false"/>
