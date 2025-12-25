@@ -8,6 +8,7 @@
 #include "../drivers/uart_dma.h"
 #include "../drivers/rtcc.h"
 #include "../drivers/qspi/qspi_flash.h"
+#include "../drivers/qspi/qspi_hw.h"
 
 /* Provided by your SysTick code */
 extern uint32_t millis(void);
@@ -65,6 +66,7 @@ void board_init(void)
         RTCC_SyncFromBuildTime();
     #endif
     #ifdef USE_QSPI_FLASH
+        QSPI_HW_PinInit();
         if (!QSPI_Flash_Init())
         {
             printf("[QSPI] Init FAILED (JEDEC mismatch or bus issue)\r\n");

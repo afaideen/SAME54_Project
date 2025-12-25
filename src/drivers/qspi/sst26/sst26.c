@@ -134,13 +134,14 @@ bool SST26_HighSpeedRead(void *rx, uint32_t len, uint32_t address)
     if ((rx == NULL) || (len == 0U))
         return false;
 
-    /* Harmony: 0x0B, QUAD_CMD, dummy_cycles=6 */
-    return QSPI_HW_MemoryRead(SST26_CMD_HIGH_SPEED_READ,
-                              QSPI_WIDTH_QUAD_CMD,
-                              QSPI_ADDRLEN_24BITS,
-                              false, 0, 0,
-                              false,
-                              6U,
-                              rx, (size_t)len,
-                              address);
+    /* 0x0B = 1-1-1 High Speed Read, 8 dummy cycles (1 dummy byte) */
+    return QSPI_HW_MemoryRead_Simple(
+        SST26_CMD_HIGH_SPEED_READ,
+        QSPI_WIDTH_SINGLE_BIT_SPI,
+        8U,
+        address,
+        rx,
+        (size_t)len
+    );
 }
+

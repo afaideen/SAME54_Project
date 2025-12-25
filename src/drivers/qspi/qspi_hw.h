@@ -37,23 +37,14 @@ typedef enum
     QSPI_ADDRLEN_32BITS = 3,
 } qspi_addrlen_t;
 
+void QSPI_HW_PinInit(void);
 /* Initialize QSPI peripheral (clock masks + SWRST + basic MODE_MEMORY setup). */
 void QSPI_HW_Init(void);
-
 /* Enable/disable the QSPI peripheral. */
 void QSPI_HW_Enable(void);
 void QSPI_HW_Disable(void);
 
-/*
- * Configure the default memory-mapped READ transaction.
- * After this, the CPU can read from (uint8_t*)QSPI_ADDR + offset.
- */
-void QSPI_HW_ConfigureMemoryRead(uint8_t opcode,
-                                 qspi_width_t width,
-                                 qspi_addrlen_t addrlen,
-                                 uint8_t optcode,
-                                 uint8_t optlen_bits,
-                                 uint8_t dummy_cycles);
+
 
 /*
  * Execute an instruction-only command (no address, no data).
@@ -80,17 +71,27 @@ bool QSPI_HW_ReadEx(uint8_t opcode,
                     void *rx,
                     size_t rx_len);
 
-bool QSPI_HW_MemoryRead(uint8_t opcode,
-                        qspi_width_t width,
-                        qspi_addrlen_t addrlen,
-                        bool opt_en,
-                        uint8_t optcode,
-                        uint8_t optlen_bits,
-                        bool continuous_read_en,
-                        uint8_t dummy_cycles,
-                        void *rx,
-                        size_t rx_len,
-                        uint32_t address);
+bool QSPI_HW_MemoryRead_Simple(
+    uint8_t opcode,
+    qspi_width_t width,
+    uint8_t dummy_cycles,
+    uint32_t address,
+    void *rx,
+    size_t rx_len
+);
+
+bool QSPI_HW_MemoryRead(
+    uint8_t opcode,
+    qspi_width_t width,
+    qspi_addrlen_t addrlen,
+    bool opt_en,
+    uint8_t optcode,
+    uint8_t optlen_bits,
+    uint8_t dummy_cycles,
+    void *rx,
+    size_t rx_len,
+    uint32_t address
+);
 
 bool QSPI_HW_MemoryWrite(uint8_t opcode,
                          qspi_width_t width,

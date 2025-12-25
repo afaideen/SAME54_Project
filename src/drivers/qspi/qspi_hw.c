@@ -13,181 +13,182 @@
 /* AHB aperture base (device-pack symbol) */
 static volatile uint8_t * const QSPI_MEM8 = (volatile uint8_t *)QSPI_ADDR;
 
+/* Harmony-style transfer prologue:
+ *  - define INSTRADDR even for register commands
+ *  - clear stale INSTREND so next transfer isn't ignored
+ */
+static inline void qspi_begin_transfer_common(void)
+{
+    if ((QSPI_REGS->QSPI_CTRLA & QSPI_CTRLA_ENABLE_Msk) == 0U)
+    {
+        QSPI_REGS->QSPI_CTRLA |= QSPI_CTRLA_ENABLE_Msk;
+    }
+
+    /* Harmony always defines INSTRADDR (0 for pure register commands). */
+    QSPI_REGS->QSPI_INSTRADDR = 0U;
+
+    /* Clear any stale completion so the next transfer can complete cleanly. */
+    QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
+}
+
 static inline void QSPI_HW_SyncInstr(void)
 {
-    /* Harmony PLIB pattern: read-back to ensure APB writes are visible before AHB access */
+    /* Readback sync point as used by Harmony (forces APB write completion) */
     (void)QSPI_REGS->QSPI_INSTRFRAME;
     __DSB();
     __ISB();
 }
 
-static inline uint32_t qspi_optcodelen_field(uint8_t optlen_bits)
-{
-    switch (optlen_bits)
-    {
-        case 1:  return QSPI_INSTRFRAME_OPTCODELEN(QSPI_INSTRFRAME_OPTCODELEN_1BIT_Val);
-        case 2:  return QSPI_INSTRFRAME_OPTCODELEN(QSPI_INSTRFRAME_OPTCODELEN_2BITS_Val);
-        case 4:  return QSPI_INSTRFRAME_OPTCODELEN(QSPI_INSTRFRAME_OPTCODELEN_4BITS_Val);
-        case 8:  return QSPI_INSTRFRAME_OPTCODELEN(QSPI_INSTRFRAME_OPTCODELEN_8BITS_Val);
-        default: return QSPI_INSTRFRAME_OPTCODELEN(QSPI_INSTRFRAME_OPTCODELEN_8BITS_Val);
-    }
-}
-
+/* End-of-transfer + wait complete (Harmony style) */
 static inline bool qspi_end_transfer_wait(void)
 {
     /* Clear stale completion */
     QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
 
     /* Don’t overwrite CTRLA; just request end-of-transfer */
-    QSPI_REGS->QSPI_CTRLA |= QSPI_CTRLA_LASTXFER_Msk;
+    QSPI_REGS->QSPI_CTRLA = QSPI_CTRLA_ENABLE_Msk | QSPI_CTRLA_LASTXFER_Msk;
+
 
     uint32_t guard = 2000000UL;
     while (((QSPI_REGS->QSPI_INTFLAG & QSPI_INTFLAG_INSTREND_Msk) == 0U) && (guard-- != 0U)) { }
     if (guard == 0U) return false;
 
+    /* Clear completion (Harmony always clears after wait) */
     QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
     return true;
 }
 
+/* Small memcpy helpers (Harmony-like word then byte tail copy) */
+static inline void qspi_memcpy_32bit(volatile uint32_t *dst, const uint32_t *src, size_t words)
+{
+    for (size_t i = 0; i < words; i++)
+    {
+        dst[i] = src[i];
+    }
+}
+
+static inline void qspi_memcpy_8(volatile uint8_t *dst, const uint8_t *src, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        dst[i] = src[i];
+    }
+}
+
+void QSPI_HW_PinInit(void)
+{
+    /* Enable PORT bus clock (PORT is on APBB) */
+    MCLK_REGS->MCLK_APBBMASK |= MCLK_APBBMASK_PORT_Msk;
+
+    /* ===== PORTA: PA08..PA11 -> Function H (QSPI DATA0..DATA3) =====
+       Harmony:
+         PINCFG[8..11] = 0x1
+         PMUX[4] = 0x77 (PA08/PA09)
+         PMUX[5] = 0x77 (PA10/PA11)
+    */
+    PORT_REGS->GROUP[0].PORT_PINCFG[8]  = 0x1U;
+    PORT_REGS->GROUP[0].PORT_PINCFG[9]  = 0x1U;
+    PORT_REGS->GROUP[0].PORT_PINCFG[10] = 0x1U;
+    PORT_REGS->GROUP[0].PORT_PINCFG[11] = 0x1U;
+
+    PORT_REGS->GROUP[0].PORT_PMUX[4] = 0x77U;
+    PORT_REGS->GROUP[0].PORT_PMUX[5] = 0x77U;
+
+    /* ===== PORTB: PB10..PB11 -> Function H (QSPI SCK / CS) =====
+       Harmony:
+         PINCFG[10..11] = 0x1
+         PMUX[5] = 0x77 (PB10/PB11)
+    */
+    PORT_REGS->GROUP[1].PORT_PINCFG[10] = 0x1U;
+    PORT_REGS->GROUP[1].PORT_PINCFG[11] = 0x1U;
+
+    PORT_REGS->GROUP[1].PORT_PMUX[5] = 0x77U;
+}
+
+void QSPI_HW_Initialize(void)
+{
+    /* Reset and Disable the qspi Module */
+    QSPI_REGS->QSPI_CTRLA = QSPI_CTRLA_SWRST_Msk;
+
+    // Set Mode Register values
+    /* MODE = MEMORY */
+    /* LOOPEN = 0 */
+    /* WDRBT = 0 */
+    /* SMEMREG = 0 */
+    /* CSMODE = NORELOAD */
+    /* DATALEN = 0x6 */
+    /* DLYCBT = 0 */
+    /* DLYCS = 0 */
+    QSPI_REGS->QSPI_CTRLB = QSPI_CTRLB_MODE_MEMORY | QSPI_CTRLB_CSMODE_NORELOAD | QSPI_CTRLB_DATALEN(0x6U);
+
+    // Set serial clock register
+    QSPI_REGS->QSPI_BAUD = (QSPI_BAUD_BAUD(1U))  ;
+
+    // Enable the qspi Module
+    QSPI_REGS->QSPI_CTRLA = QSPI_CTRLA_ENABLE_Msk;
+
+    while((QSPI_REGS->QSPI_STATUS & QSPI_STATUS_ENABLE_Msk) != QSPI_STATUS_ENABLE_Msk)
+    {
+        /* Wait for QSPI enable flag to set */
+    }
+}
 
 void QSPI_HW_Init(void)
 {
-    /* Enable bus clocks to QSPI */
-    MCLK_REGS->MCLK_AHBMASK |= (MCLK_AHBMASK_QSPI_Msk | MCLK_AHBMASK_QSPI_2X_Msk);
-
-    /* Some header packs also gate QSPI on APBC. Enable if present. */
-#ifdef MCLK_APBCMASK_QSPI_Msk
+    /* 0) Enable bus clocks needed for QSPI register + AHB aperture access */
+    MCLK_REGS->MCLK_AHBMASK  |= (MCLK_AHBMASK_QSPI_Msk | MCLK_AHBMASK_QSPI_2X_Msk);
     MCLK_REGS->MCLK_APBCMASK |= MCLK_APBCMASK_QSPI_Msk;
-#endif
 
-    /* Configure QSPI pins (Harmony-equivalent):
-     *  - PA08..PA11 : QSPI DATA[0..3]
-     *  - PB10       : QSPI SCK
-     *  - PB11       : QSPI CS
-     * Peripheral function = H, enable PMUX, enable high drive strength.
-     */
-    const uint8_t pa_pins[] = { 8U, 9U, 10U, 11U };
-    for (size_t i = 0; i < (sizeof(pa_pins) / sizeof(pa_pins[0])); i++)
-    {
-        const uint8_t p = pa_pins[i];
+    /* 1) Pin mux (matches Harmony PORT_Initialize) */
+    // PA08..PA11 = QIO0..3, PB10=QSCK, PB11=QCS (PMUX H)
+    // ... your existing pinmux code ...
 
-        PORT_REGS->GROUP[0].PORT_PINCFG[p] =
-            (uint8_t)(PORT_PINCFG_PMUXEN_Msk | PORT_PINCFG_DRVSTR_Msk);
-
-        if ((p & 1U) == 0U)
-        {
-            PORT_REGS->GROUP[0].PORT_PMUX[p >> 1] =
-                (uint8_t)((PORT_REGS->GROUP[0].PORT_PMUX[p >> 1] & (uint8_t)~PORT_PMUX_PMUXE_Msk) |
-                          (uint8_t)PORT_PMUX_PMUXE_H);
-        }
-        else
-        {
-            PORT_REGS->GROUP[0].PORT_PMUX[p >> 1] =
-                (uint8_t)((PORT_REGS->GROUP[0].PORT_PMUX[p >> 1] & (uint8_t)~PORT_PMUX_PMUXO_Msk) |
-                          (uint8_t)PORT_PMUX_PMUXO_H);
-        }
-    }
-
-    const uint8_t pb_pins[] = { 10U, 11U };
-    for (size_t i = 0; i < (sizeof(pb_pins) / sizeof(pb_pins[0])); i++)
-    {
-        const uint8_t p = pb_pins[i];
-
-        PORT_REGS->GROUP[1].PORT_PINCFG[p] =
-            (uint8_t)(PORT_PINCFG_PMUXEN_Msk | PORT_PINCFG_DRVSTR_Msk);
-
-        if ((p & 1U) == 0U)
-        {
-            PORT_REGS->GROUP[1].PORT_PMUX[p >> 1] =
-                (uint8_t)((PORT_REGS->GROUP[1].PORT_PMUX[p >> 1] & (uint8_t)~PORT_PMUX_PMUXE_Msk) |
-                          (uint8_t)PORT_PMUX_PMUXE_H);
-        }
-        else
-        {
-            PORT_REGS->GROUP[1].PORT_PMUX[p >> 1] =
-                (uint8_t)((PORT_REGS->GROUP[1].PORT_PMUX[p >> 1] & (uint8_t)~PORT_PMUX_PMUXO_Msk) |
-                          (uint8_t)PORT_PMUX_PMUXO_H);
-        }
-    }
-
-    /* Software reset */
+    /* 2) Software reset */
     QSPI_REGS->QSPI_CTRLA = QSPI_CTRLA_SWRST_Msk;
-    while ((QSPI_REGS->QSPI_CTRLA & QSPI_CTRLA_SWRST_Msk) != 0U)
-    {
-        /* spin */
-    }
+    while ((QSPI_REGS->QSPI_CTRLA & QSPI_CTRLA_SWRST_Msk) != 0U) { }
 
-    /* Default: Memory mode + CS no-reload (matches Harmony PLIB) */
+    /* 3) Match Harmony: MODE = MEMORY, CSMODE = NORELOAD, DATALEN = 0x6 */
     QSPI_REGS->QSPI_CTRLB =
         QSPI_CTRLB_MODE_MEMORY |
         QSPI_CTRLB_CSMODE(QSPI_CTRLB_CSMODE_NORELOAD_Val) |
         QSPI_CTRLB_DATALEN(0x6U);
 
-    /* Conservative default baud; caller can tune if needed */
+    /* 4) BAUD */
     QSPI_REGS->QSPI_BAUD = QSPI_BAUD_BAUD(1U);
 
-    /* Polling mode */
+    /* 5) Polling mode */
     QSPI_REGS->QSPI_INTENCLR = 0xFFU;
 }
 
+
 void QSPI_HW_Enable(void)
 {
-    QSPI_REGS->QSPI_CTRLA = QSPI_CTRLA_ENABLE_Msk;
-    while ((QSPI_REGS->QSPI_STATUS & QSPI_STATUS_ENABLE_Msk) == 0U)
-    {
-        /* spin */
-    }
+    QSPI_REGS->QSPI_CTRLA |= QSPI_CTRLA_ENABLE_Msk;
+    while ((QSPI_REGS->QSPI_STATUS & QSPI_STATUS_ENABLE_Msk) == 0U) { }
 }
 
 void QSPI_HW_Disable(void)
 {
-    QSPI_REGS->QSPI_CTRLA = 0U;
-    while ((QSPI_REGS->QSPI_STATUS & QSPI_STATUS_ENABLE_Msk) != 0U)
-    {
-        /* spin */
-    }
+    QSPI_REGS->QSPI_CTRLA &= ~QSPI_CTRLA_ENABLE_Msk;
 }
 
-void QSPI_HW_ConfigureMemoryRead(uint8_t opcode,
-                                 qspi_width_t width,
-                                 qspi_addrlen_t addrlen,
-                                 uint8_t optcode,
-                                 uint8_t optlen_bits,
-                                 uint8_t dummy_cycles)
+void QSPI_HW_SetBaud(uint8_t baud_div)
 {
-    QSPI_REGS->QSPI_INSTRCTRL =
-        QSPI_INSTRCTRL_INSTR(opcode) |
-        QSPI_INSTRCTRL_OPTCODE(optcode);
-
-    uint32_t frame =
-        QSPI_INSTRFRAME_WIDTH((uint32_t)width) |
-        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READMEMORY_Val) |
-        QSPI_INSTRFRAME_INSTREN_Msk |
-        QSPI_INSTRFRAME_ADDREN_Msk |
-        QSPI_INSTRFRAME_ADDRLEN((uint32_t)addrlen) |
-        QSPI_INSTRFRAME_DATAEN_Msk |
-        QSPI_INSTRFRAME_DUMMYLEN(dummy_cycles);
-
-    if (optlen_bits != 0U)
-    {
-        frame |= QSPI_INSTRFRAME_OPTCODEEN_Msk;
-        frame |= qspi_optcodelen_field(optlen_bits);
-    }
-
-    QSPI_REGS->QSPI_INSTRFRAME = frame;
-    QSPI_HW_SyncInstr();
+    QSPI_REGS->QSPI_BAUD = QSPI_BAUD_BAUD((uint32_t)baud_div);
 }
 
 bool QSPI_HW_Command(uint8_t opcode, qspi_width_t width)
 {
+    qspi_begin_transfer_common();
+
     QSPI_REGS->QSPI_INSTRCTRL = QSPI_INSTRCTRL_INSTR(opcode);
 
     QSPI_REGS->QSPI_INSTRFRAME =
         QSPI_INSTRFRAME_WIDTH((uint32_t)width) |
         QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READ_Val) |
         QSPI_INSTRFRAME_INSTREN_Msk;
-    QSPI_HW_SyncInstr();
 
+    QSPI_HW_SyncInstr();
     return qspi_end_transfer_wait();
 }
 
@@ -197,6 +198,8 @@ bool QSPI_HW_Read(uint8_t opcode, qspi_width_t width, void *rx, size_t rx_len)
     {
         return false;
     }
+
+    qspi_begin_transfer_common();
 
     QSPI_REGS->QSPI_INSTRCTRL = QSPI_INSTRCTRL_INSTR(opcode);
 
@@ -227,6 +230,8 @@ bool QSPI_HW_Write(uint8_t opcode, qspi_width_t width, const void *tx, size_t tx
         return false;
     }
 
+    qspi_begin_transfer_common();
+
     QSPI_REGS->QSPI_INSTRCTRL = QSPI_INSTRCTRL_INSTR(opcode);
 
     QSPI_REGS->QSPI_INSTRFRAME =
@@ -249,21 +254,14 @@ bool QSPI_HW_Write(uint8_t opcode, qspi_width_t width, const void *tx, size_t tx
     return qspi_end_transfer_wait();
 }
 
-static inline void qspi_memcpy_8(uint8_t *dst, const uint8_t *src, size_t n)
-{
-    while (n-- != 0U) { *dst++ = *src++; }
-}
-
-static inline void qspi_memcpy_32(uint32_t *dst, const uint32_t *src, size_t n_words)
-{
-    while (n_words-- != 0U) { *dst++ = *src++; }
-}
-
 bool QSPI_HW_CommandAddr(uint8_t opcode,
                          qspi_width_t width,
                          qspi_addrlen_t addrlen,
                          uint32_t address)
 {
+    /* Clear stale completion before starting a new instruction */
+    QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
+
     QSPI_REGS->QSPI_INSTRADDR = QSPI_INSTRADDR_ADDR(address);
     QSPI_REGS->QSPI_INSTRCTRL = QSPI_INSTRCTRL_INSTR(opcode);
 
@@ -284,21 +282,29 @@ bool QSPI_HW_ReadEx(uint8_t opcode,
                     void *rx,
                     size_t rx_len)
 {
-    if ((rx == NULL) || (rx_len == 0U)) { return false; }
+    if ((rx == NULL) || (rx_len == 0U))
+    {
+        return false;
+    }
+
+    qspi_begin_transfer_common();
 
     QSPI_REGS->QSPI_INSTRCTRL = QSPI_INSTRCTRL_INSTR(opcode);
 
     QSPI_REGS->QSPI_INSTRFRAME =
         QSPI_INSTRFRAME_WIDTH((uint32_t)width) |
-        QSPI_INSTRFRAME_DUMMYLEN(dummy_cycles) |
         QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READ_Val) |
         QSPI_INSTRFRAME_INSTREN_Msk |
-        QSPI_INSTRFRAME_DATAEN_Msk;
+        QSPI_INSTRFRAME_DATAEN_Msk |
+        QSPI_INSTRFRAME_DUMMYLEN((uint32_t)dummy_cycles);
 
     QSPI_HW_SyncInstr();
 
     uint8_t *dst = (uint8_t *)rx;
-    for (size_t i = 0; i < rx_len; i++) { dst[i] = (uint8_t)QSPI_MEM8[i]; }
+    for (size_t i = 0; i < rx_len; i++)
+    {
+        dst[i] = (uint8_t)QSPI_MEM8[i];
+    }
 
     __DSB();
     __ISB();
@@ -306,69 +312,86 @@ bool QSPI_HW_ReadEx(uint8_t opcode,
     return qspi_end_transfer_wait();
 }
 
+bool QSPI_HW_MemoryRead_Simple(
+    uint8_t opcode,
+    qspi_width_t width,
+    uint8_t dummy_cycles,
+    uint32_t address,
+    void *rx,
+    size_t rx_len
+)
+{
+    return QSPI_HW_MemoryRead(
+        opcode,                     /* opcode decided by flash driver */
+        width,                      /* bus width */
+        QSPI_ADDRLEN_24BITS,        /* standard 24-bit address */
+        false,                      /* no option code */
+        0,                          /* optcode */
+        0,                          /* optlen */
+        dummy_cycles,               /* dummy cycles */
+        rx,
+        rx_len,
+        address
+    );
+}
+
+
 bool QSPI_HW_MemoryRead(uint8_t opcode,
                         qspi_width_t width,
                         qspi_addrlen_t addrlen,
                         bool opt_en,
                         uint8_t optcode,
                         uint8_t optlen_bits,
-                        bool continuous_read_en,
                         uint8_t dummy_cycles,
                         void *rx,
                         size_t rx_len,
                         uint32_t address)
 {
-    if ((rx == NULL) || (rx_len == 0U)) { return false; }
+    if ((rx == NULL) || (rx_len == 0U))
+    {
+        return false;
+    }
 
+    /* Clear stale completion before starting a new instruction */
+    QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
+
+    /* Program address/opcode */
     QSPI_REGS->QSPI_INSTRADDR = QSPI_INSTRADDR_ADDR(address);
-    QSPI_REGS->QSPI_INSTRCTRL =
-        QSPI_INSTRCTRL_INSTR(opcode) |
-        QSPI_INSTRCTRL_OPTCODE(optcode);
+    QSPI_REGS->QSPI_INSTRCTRL = QSPI_INSTRCTRL_INSTR(opcode) |
+                                (opt_en ? QSPI_INSTRCTRL_OPTCODE(optcode) : 0U);
+
 
     uint32_t frame =
         QSPI_INSTRFRAME_WIDTH((uint32_t)width) |
-        QSPI_INSTRFRAME_ADDRLEN((uint32_t)addrlen) |
-        QSPI_INSTRFRAME_DUMMYLEN(dummy_cycles) |
+        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READMEMORY_Val) |
         QSPI_INSTRFRAME_INSTREN_Msk |
         QSPI_INSTRFRAME_ADDREN_Msk |
-        QSPI_INSTRFRAME_DATAEN_Msk |
-        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READMEMORY_Val);
+        QSPI_INSTRFRAME_ADDRLEN((uint32_t)addrlen) |
+        QSPI_INSTRFRAME_DATAEN_Msk;
 
     if (opt_en)
     {
         frame |= QSPI_INSTRFRAME_OPTCODEEN_Msk;
-        frame |= qspi_optcodelen_field(optlen_bits);
+        frame |= QSPI_INSTRFRAME_OPTCODELEN((uint32_t)optlen_bits);
     }
 
-    if (continuous_read_en)
+    if (dummy_cycles != 0U)
     {
-        frame |= QSPI_INSTRFRAME_CRMODE_Msk;
+        frame |= QSPI_INSTRFRAME_DUMMYLEN((uint32_t)dummy_cycles);
     }
 
     QSPI_REGS->QSPI_INSTRFRAME = frame;
     QSPI_HW_SyncInstr();
 
-    /* Use the AHB-mapped window + address (same pattern as Harmony PLIB) */
-    const uintptr_t src_addr = (uintptr_t)QSPI_ADDR | (uintptr_t)address;
-    const uint8_t *src8 = (const uint8_t *)src_addr;
+    /* Read via AHB window */
+    uint8_t *dst8 = (uint8_t *)rx;
+    const volatile uint8_t *src8 = (const volatile uint8_t *)(QSPI_ADDR | address);
 
-    /* Safe copy: do 32-bit only if both aligned */
-    uintptr_t dst_addr = (uintptr_t)rx;
-    size_t n32 = 0;
-
-    if (((src_addr | dst_addr) & 0x3U) == 0U)
+    for (size_t i = 0; i < rx_len; i++)
     {
-        n32 = rx_len / 4U;
-        qspi_memcpy_32((uint32_t *)rx, (const uint32_t *)src_addr, n32);
+        dst8[i] = src8[i];
     }
 
-    size_t done = n32 * 4U;
-    if (done < rx_len)
-    {
-        qspi_memcpy_8((uint8_t *)rx + done, src8 + done, rx_len - done);
-    }
-
-    (void)QSPI_REGS->QSPI_INTFLAG; /* Harmony does a dummy read here */
     __DSB();
     __ISB();
 
@@ -386,44 +409,53 @@ bool QSPI_HW_MemoryWrite(uint8_t opcode,
                          size_t tx_len,
                          uint32_t address)
 {
-    if ((tx == NULL) || (tx_len == 0U)) { return false; }
+    if ((tx == NULL) || (tx_len == 0U))
+    {
+        return false;
+    }
+
+    /* Clear stale completion before starting a new instruction */
+    QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
 
     QSPI_REGS->QSPI_INSTRADDR = QSPI_INSTRADDR_ADDR(address);
-    QSPI_REGS->QSPI_INSTRCTRL =
-        QSPI_INSTRCTRL_INSTR(opcode) |
-        QSPI_INSTRCTRL_OPTCODE(optcode);
+    QSPI_REGS->QSPI_INSTRCTRL = QSPI_INSTRCTRL_INSTR(opcode) |
+                                (opt_en ? QSPI_INSTRCTRL_OPTCODE(optcode) : 0U);
+
 
     uint32_t frame =
         QSPI_INSTRFRAME_WIDTH((uint32_t)width) |
-        QSPI_INSTRFRAME_ADDRLEN((uint32_t)addrlen) |
-        QSPI_INSTRFRAME_DUMMYLEN(dummy_cycles) |
+        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_WRITEMEMORY_Val) |
         QSPI_INSTRFRAME_INSTREN_Msk |
         QSPI_INSTRFRAME_ADDREN_Msk |
-        QSPI_INSTRFRAME_DATAEN_Msk |
-        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_WRITEMEMORY_Val);
+        QSPI_INSTRFRAME_ADDRLEN((uint32_t)addrlen) |
+        QSPI_INSTRFRAME_DATAEN_Msk;
 
     if (opt_en)
     {
         frame |= QSPI_INSTRFRAME_OPTCODEEN_Msk;
-        frame |= qspi_optcodelen_field(optlen_bits);
+        frame |= QSPI_INSTRFRAME_OPTCODELEN((uint32_t)optlen_bits);
+    }
+
+    if (dummy_cycles != 0U)
+    {
+        frame |= QSPI_INSTRFRAME_DUMMYLEN((uint32_t)dummy_cycles);
     }
 
     QSPI_REGS->QSPI_INSTRFRAME = frame;
     QSPI_HW_SyncInstr();
 
-    const uintptr_t dst_addr = (uintptr_t)QSPI_ADDR | (uintptr_t)address;
-    uint8_t *dst8 = (uint8_t *)dst_addr;
-    const uint8_t *src8 = (const uint8_t *)tx;
+    /* Write payload into AHB aperture (word then byte tail like Harmony) */
+    volatile uint32_t *dst32 = (volatile uint32_t *)(QSPI_ADDR | address);
+    const uint32_t *src32 = (const uint32_t *)tx;
+    size_t n32 = tx_len / 4U;
 
-    /* Safe copy: 32-bit only if both aligned */
-    uintptr_t src_addr = (uintptr_t)tx;
-    size_t n32 = 0;
-
-    if (((dst_addr | src_addr) & 0x3U) == 0U)
+    if (n32 != 0U)
     {
-        n32 = tx_len / 4U;
-        qspi_memcpy_32((uint32_t *)dst_addr, (const uint32_t *)tx, n32);
+        qspi_memcpy_32bit(dst32, src32, n32);
     }
+
+    volatile uint8_t *dst8 = (volatile uint8_t *)(QSPI_ADDR | address);
+    const uint8_t *src8 = (const uint8_t *)tx;
 
     size_t done = n32 * 4U;
     if (done < tx_len)
@@ -436,6 +468,3 @@ bool QSPI_HW_MemoryWrite(uint8_t opcode,
 
     return qspi_end_transfer_wait();
 }
-
-
-
