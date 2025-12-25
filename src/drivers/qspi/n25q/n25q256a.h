@@ -1,8 +1,4 @@
-/* n25q256a.h: Micron N25Q256A command helpers
- *
- * References:
- *  - N25Q256A command set / register definitions (Micron datasheet)
- */
+/* n25q256a.h: Micron N25Q256A command helpers */
 
 #ifndef N25Q256A_H
 #define N25Q256A_H
@@ -10,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "qspi_hw.h"
+#include "../qspi_hw.h"
 
 /* --- Core commands --- */
 #define N25Q_CMD_WRITE_ENABLE             (0x06U)
@@ -22,7 +18,8 @@
 #define N25Q_CMD_RESET_MEMORY             (0x99U)
 
 /* --- Identification --- */
-#define N25Q_CMD_READ_ID                  (0x9FU) /* manufacturer + memtype + capacity */
+#define N25Q_CMD_READ_ID                  (0x9FU) /* JEDEC: mfr + memtype + capacity */
+#define N25Q_CMD_MULTIPLE_IO_READ_ID      (0xAFU) /* Harmony app_n25q uses this after quad enable */
 
 /* --- Configuration register commands (datasheet) --- */
 #define N25Q_CMD_READ_NONVOLATILE_CFG     (0xB5U) /* RDNVCR: returns 2 bytes, LSB first */
@@ -47,9 +44,9 @@
 #define N25Q_VCR_DUMMY_CYCLES_Msk         (0xFU << N25Q_VCR_DUMMY_CYCLES_Pos)
 
 /* --- EVCR bitfields (Enhanced Volatile Configuration Register) --- */
-/* Datasheet: Bit7 = Quad I/O protocol (1=disabled, 0=enabled); Bit6 = Dual I/O protocol (1=disabled, 0=enabled) */
 #define N25Q_EVCR_QUAD_DISABLE_Msk        (1U << 7)
 #define N25Q_EVCR_DUAL_DISABLE_Msk        (1U << 6)
+
 
 /* Public API */
 bool N25Q_Reset(void);

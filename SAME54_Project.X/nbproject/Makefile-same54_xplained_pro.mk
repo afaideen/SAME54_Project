@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../src/main.c ../src/common/board.c ../src/common/cpu.c ../src/common/delay.c ../src/common/systick.c ../src/drivers/rtcc.c ../src/drivers/uart.c ../src/drivers/uart_dma.c
+SOURCEFILES_QUOTED_IF_SPACED=../src/common/board.c ../src/common/cpu.c ../src/common/delay.c ../src/common/systick.c ../src/drivers/qspi/qspi_flash.c ../src/drivers/qspi/qspi_hw.c ../src/drivers/rtcc.c ../src/drivers/uart.c ../src/drivers/uart_dma.c ../src/main.c ../src/drivers/qspi/sst26/sst26.c ../src/drivers/qspi/n25q/n25q256a.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1360937237/main.o ${OBJECTDIR}/_ext/394045403/board.o ${OBJECTDIR}/_ext/394045403/cpu.o ${OBJECTDIR}/_ext/394045403/delay.o ${OBJECTDIR}/_ext/394045403/systick.o ${OBJECTDIR}/_ext/1639450193/rtcc.o ${OBJECTDIR}/_ext/1639450193/uart.o ${OBJECTDIR}/_ext/1639450193/uart_dma.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1360937237/main.o.d ${OBJECTDIR}/_ext/394045403/board.o.d ${OBJECTDIR}/_ext/394045403/cpu.o.d ${OBJECTDIR}/_ext/394045403/delay.o.d ${OBJECTDIR}/_ext/394045403/systick.o.d ${OBJECTDIR}/_ext/1639450193/rtcc.o.d ${OBJECTDIR}/_ext/1639450193/uart.o.d ${OBJECTDIR}/_ext/1639450193/uart_dma.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/394045403/board.o ${OBJECTDIR}/_ext/394045403/cpu.o ${OBJECTDIR}/_ext/394045403/delay.o ${OBJECTDIR}/_ext/394045403/systick.o ${OBJECTDIR}/_ext/1151356775/qspi_flash.o ${OBJECTDIR}/_ext/1151356775/qspi_hw.o ${OBJECTDIR}/_ext/1639450193/rtcc.o ${OBJECTDIR}/_ext/1639450193/uart.o ${OBJECTDIR}/_ext/1639450193/uart_dma.o ${OBJECTDIR}/_ext/1360937237/main.o ${OBJECTDIR}/_ext/1254920606/sst26.o ${OBJECTDIR}/_ext/456336618/n25q256a.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/394045403/board.o.d ${OBJECTDIR}/_ext/394045403/cpu.o.d ${OBJECTDIR}/_ext/394045403/delay.o.d ${OBJECTDIR}/_ext/394045403/systick.o.d ${OBJECTDIR}/_ext/1151356775/qspi_flash.o.d ${OBJECTDIR}/_ext/1151356775/qspi_hw.o.d ${OBJECTDIR}/_ext/1639450193/rtcc.o.d ${OBJECTDIR}/_ext/1639450193/uart.o.d ${OBJECTDIR}/_ext/1639450193/uart_dma.o.d ${OBJECTDIR}/_ext/1360937237/main.o.d ${OBJECTDIR}/_ext/1254920606/sst26.o.d ${OBJECTDIR}/_ext/456336618/n25q256a.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1360937237/main.o ${OBJECTDIR}/_ext/394045403/board.o ${OBJECTDIR}/_ext/394045403/cpu.o ${OBJECTDIR}/_ext/394045403/delay.o ${OBJECTDIR}/_ext/394045403/systick.o ${OBJECTDIR}/_ext/1639450193/rtcc.o ${OBJECTDIR}/_ext/1639450193/uart.o ${OBJECTDIR}/_ext/1639450193/uart_dma.o
+OBJECTFILES=${OBJECTDIR}/_ext/394045403/board.o ${OBJECTDIR}/_ext/394045403/cpu.o ${OBJECTDIR}/_ext/394045403/delay.o ${OBJECTDIR}/_ext/394045403/systick.o ${OBJECTDIR}/_ext/1151356775/qspi_flash.o ${OBJECTDIR}/_ext/1151356775/qspi_hw.o ${OBJECTDIR}/_ext/1639450193/rtcc.o ${OBJECTDIR}/_ext/1639450193/uart.o ${OBJECTDIR}/_ext/1639450193/uart_dma.o ${OBJECTDIR}/_ext/1360937237/main.o ${OBJECTDIR}/_ext/1254920606/sst26.o ${OBJECTDIR}/_ext/456336618/n25q256a.o
 
 # Source Files
-SOURCEFILES=../src/main.c ../src/common/board.c ../src/common/cpu.c ../src/common/delay.c ../src/common/systick.c ../src/drivers/rtcc.c ../src/drivers/uart.c ../src/drivers/uart_dma.c
+SOURCEFILES=../src/common/board.c ../src/common/cpu.c ../src/common/delay.c ../src/common/systick.c ../src/drivers/qspi/qspi_flash.c ../src/drivers/qspi/qspi_hw.c ../src/drivers/rtcc.c ../src/drivers/uart.c ../src/drivers/uart_dma.c ../src/main.c ../src/drivers/qspi/sst26/sst26.c ../src/drivers/qspi/n25q/n25q256a.c
 
 # Pack Options 
 PACK_COMMON_OPTIONS=-I "${CMSIS_DIR}/CMSIS/Core/Include"
@@ -110,13 +110,6 @@ endif
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: compile
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/_ext/1360937237/main.o: ../src/main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1360937237" 
-	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1360937237/main.o.d" -o ${OBJECTDIR}/_ext/1360937237/main.o ../src/main.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1360937237/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
-	
 ${OBJECTDIR}/_ext/394045403/board.o: ../src/common/board.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
 	@${RM} ${OBJECTDIR}/_ext/394045403/board.o.d 
@@ -145,6 +138,20 @@ ${OBJECTDIR}/_ext/394045403/systick.o: ../src/common/systick.c  nbproject/Makefi
 	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/systick.o.d" -o ${OBJECTDIR}/_ext/394045403/systick.o ../src/common/systick.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/systick.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
+${OBJECTDIR}/_ext/1151356775/qspi_flash.o: ../src/drivers/qspi/qspi_flash.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1151356775" 
+	@${RM} ${OBJECTDIR}/_ext/1151356775/qspi_flash.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1151356775/qspi_flash.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1151356775/qspi_flash.o.d" -o ${OBJECTDIR}/_ext/1151356775/qspi_flash.o ../src/drivers/qspi/qspi_flash.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1151356775/qspi_flash.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/_ext/1151356775/qspi_hw.o: ../src/drivers/qspi/qspi_hw.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1151356775" 
+	@${RM} ${OBJECTDIR}/_ext/1151356775/qspi_hw.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1151356775/qspi_hw.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1151356775/qspi_hw.o.d" -o ${OBJECTDIR}/_ext/1151356775/qspi_hw.o ../src/drivers/qspi/qspi_hw.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1151356775/qspi_hw.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
 ${OBJECTDIR}/_ext/1639450193/rtcc.o: ../src/drivers/rtcc.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1639450193" 
 	@${RM} ${OBJECTDIR}/_ext/1639450193/rtcc.o.d 
@@ -166,14 +173,28 @@ ${OBJECTDIR}/_ext/1639450193/uart_dma.o: ../src/drivers/uart_dma.c  nbproject/Ma
 	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1639450193/uart_dma.o.d" -o ${OBJECTDIR}/_ext/1639450193/uart_dma.o ../src/drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1639450193/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
-else
 ${OBJECTDIR}/_ext/1360937237/main.o: ../src/main.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1360937237" 
 	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1360937237/main.o.d" -o ${OBJECTDIR}/_ext/1360937237/main.o ../src/main.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1360937237/main.o.d" -o ${OBJECTDIR}/_ext/1360937237/main.o ../src/main.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360937237/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
+${OBJECTDIR}/_ext/1254920606/sst26.o: ../src/drivers/qspi/sst26/sst26.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1254920606" 
+	@${RM} ${OBJECTDIR}/_ext/1254920606/sst26.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1254920606/sst26.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1254920606/sst26.o.d" -o ${OBJECTDIR}/_ext/1254920606/sst26.o ../src/drivers/qspi/sst26/sst26.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1254920606/sst26.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/_ext/456336618/n25q256a.o: ../src/drivers/qspi/n25q/n25q256a.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/456336618" 
+	@${RM} ${OBJECTDIR}/_ext/456336618/n25q256a.o.d 
+	@${RM} ${OBJECTDIR}/_ext/456336618/n25q256a.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG   -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/456336618/n25q256a.o.d" -o ${OBJECTDIR}/_ext/456336618/n25q256a.o ../src/drivers/qspi/n25q/n25q256a.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/456336618/n25q256a.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
+else
 ${OBJECTDIR}/_ext/394045403/board.o: ../src/common/board.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/394045403" 
 	@${RM} ${OBJECTDIR}/_ext/394045403/board.o.d 
@@ -202,6 +223,20 @@ ${OBJECTDIR}/_ext/394045403/systick.o: ../src/common/systick.c  nbproject/Makefi
 	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/394045403/systick.o.d" -o ${OBJECTDIR}/_ext/394045403/systick.o ../src/common/systick.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/394045403/systick.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
+${OBJECTDIR}/_ext/1151356775/qspi_flash.o: ../src/drivers/qspi/qspi_flash.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1151356775" 
+	@${RM} ${OBJECTDIR}/_ext/1151356775/qspi_flash.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1151356775/qspi_flash.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1151356775/qspi_flash.o.d" -o ${OBJECTDIR}/_ext/1151356775/qspi_flash.o ../src/drivers/qspi/qspi_flash.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1151356775/qspi_flash.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/_ext/1151356775/qspi_hw.o: ../src/drivers/qspi/qspi_hw.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1151356775" 
+	@${RM} ${OBJECTDIR}/_ext/1151356775/qspi_hw.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1151356775/qspi_hw.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1151356775/qspi_hw.o.d" -o ${OBJECTDIR}/_ext/1151356775/qspi_hw.o ../src/drivers/qspi/qspi_hw.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1151356775/qspi_hw.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
 ${OBJECTDIR}/_ext/1639450193/rtcc.o: ../src/drivers/rtcc.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1639450193" 
 	@${RM} ${OBJECTDIR}/_ext/1639450193/rtcc.o.d 
@@ -222,6 +257,27 @@ ${OBJECTDIR}/_ext/1639450193/uart_dma.o: ../src/drivers/uart_dma.c  nbproject/Ma
 	@${RM} ${OBJECTDIR}/_ext/1639450193/uart_dma.o 
 	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1639450193/uart_dma.o.d" -o ${OBJECTDIR}/_ext/1639450193/uart_dma.o ../src/drivers/uart_dma.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1639450193/uart_dma.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/_ext/1360937237/main.o: ../src/main.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1360937237" 
+	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1360937237/main.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1360937237/main.o.d" -o ${OBJECTDIR}/_ext/1360937237/main.o ../src/main.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1360937237/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/_ext/1254920606/sst26.o: ../src/drivers/qspi/sst26/sst26.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1254920606" 
+	@${RM} ${OBJECTDIR}/_ext/1254920606/sst26.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1254920606/sst26.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/1254920606/sst26.o.d" -o ${OBJECTDIR}/_ext/1254920606/sst26.o ../src/drivers/qspi/sst26/sst26.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1254920606/sst26.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/_ext/456336618/n25q256a.o: ../src/drivers/qspi/n25q/n25q256a.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/456336618" 
+	@${RM} ${OBJECTDIR}/_ext/456336618/n25q256a.o.d 
+	@${RM} ${OBJECTDIR}/_ext/456336618/n25q256a.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"C:/Microchip/xc32/v4.50/pic32c/include/proc/SAME54" -MMD -MF "${OBJECTDIR}/_ext/456336618/n25q256a.o.d" -o ${OBJECTDIR}/_ext/456336618/n25q256a.o ../src/drivers/qspi/n25q/n25q256a.c    -DXPRJ_same54_xplained_pro=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}" ${PACK_COMMON_OPTIONS} 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/456336618/n25q256a.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ 
 	
 endif
 

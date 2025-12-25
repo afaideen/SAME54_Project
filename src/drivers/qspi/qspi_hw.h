@@ -27,6 +27,8 @@ typedef enum
     QSPI_WIDTH_QUAD_OUTPUT    = 2,  /* 1-1-4 */
     QSPI_WIDTH_DUAL_IO        = 3,  /* 1-2-2 */
     QSPI_WIDTH_QUAD_IO        = 4,  /* 1-4-4 */
+    QSPI_WIDTH_DUAL_CMD       = 5,  /* 2-2-2 (Harmony uses after quad enable on some parts) */
+    QSPI_WIDTH_QUAD_CMD       = 6,  /* 4-4-4 (Harmony uses after quad enable on N25Q demo) */
 } qspi_width_t;
 
 typedef enum
@@ -65,5 +67,40 @@ bool QSPI_HW_Command(uint8_t opcode, qspi_width_t width);
  */
 bool QSPI_HW_Read(uint8_t opcode, qspi_width_t width, void *rx, size_t rx_len);
 bool QSPI_HW_Write(uint8_t opcode, qspi_width_t width, const void *tx, size_t tx_len);
+
+/* Harmony-PLIB equivalents (already implemented in your qspi_hw.c) */
+bool QSPI_HW_CommandAddr(uint8_t opcode,
+                         qspi_width_t width,
+                         qspi_addrlen_t addrlen,
+                         uint32_t address);
+
+bool QSPI_HW_ReadEx(uint8_t opcode,
+                    qspi_width_t width,
+                    uint8_t dummy_cycles,
+                    void *rx,
+                    size_t rx_len);
+
+bool QSPI_HW_MemoryRead(uint8_t opcode,
+                        qspi_width_t width,
+                        qspi_addrlen_t addrlen,
+                        bool opt_en,
+                        uint8_t optcode,
+                        uint8_t optlen_bits,
+                        bool continuous_read_en,
+                        uint8_t dummy_cycles,
+                        void *rx,
+                        size_t rx_len,
+                        uint32_t address);
+
+bool QSPI_HW_MemoryWrite(uint8_t opcode,
+                         qspi_width_t width,
+                         qspi_addrlen_t addrlen,
+                         bool opt_en,
+                         uint8_t optcode,
+                         uint8_t optlen_bits,
+                         uint8_t dummy_cycles,
+                         const void *tx,
+                         size_t tx_len,
+                         uint32_t address);
 
 #endif /* QSPI_HW_H */

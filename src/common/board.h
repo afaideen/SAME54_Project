@@ -128,12 +128,17 @@
  * The memory map is therefore defined below for convenience.  If you
  * attach a different size device you should adjust QSPI_AHB_SIZE to match.
  */
+#define USE_QSPI_FLASH
 
 /** Base address of the QSPI memory region on the SAME54. */
-#define QSPI_AHB_BASE  ((uintptr_t)0x04000000U)
+#define QSPI_AHB_BASE  ((uintptr_t)QSPI_ADDR)
 
 /** Maximum size of the QSPI address space (16 MiB). */
-#define QSPI_AHB_SIZE  (16U * 1024U * 1024U)
+/* QSPI Flash on SAM E54 Xplained Pro is revision-dependent:
+ * - Some boards: Micron N25Q256A (JEDEC mfr 0x20)
+ * - Some boards: Microchip/SST26 (JEDEC mfr 0xBF, type 0x26, cap 0x41/0x42/0x43 reported)
+ */
+#define QSPI_AHB_SIZE        (16UL * 1024UL * 1024UL)  /* mapped window */
 
 /* ------------------------------------------------------------------------- */
 /* Flash organisation                                                       */
@@ -145,13 +150,13 @@
  */
 
 /** Sector (erase block) size in bytes. */
-#define QSPI_FLASH_SECTOR_SIZE   (64U * 1024U)
-
-/** Page (program) size in bytes. */
-#define QSPI_FLASH_PAGE_SIZE     256U
-
-/** Total capacity of the on‑board N25Q256A flash (32 MiB). */
-#define QSPI_FLASH_CAPACITY      (32U * 1024U * 1024U)
+//#define QSPI_FLASH_SECTOR_SIZE   (64U * 1024U)
+//
+///** Page (program) size in bytes. */
+//#define QSPI_FLASH_PAGE_SIZE     256U
+//
+///** Total capacity of the on‑board N25Q256A flash (32 MiB). */
+//#define QSPI_FLASH_CAPACITY      (32U * 1024U * 1024U)
 //-----------------------------------------------------------------------------
 // Variable type
 //-----------------------------------------------------------------------------
