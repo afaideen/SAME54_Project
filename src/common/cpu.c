@@ -224,9 +224,9 @@ static void FlashAndCache_Initialize_bm(void)
      * in CTRLA, not CTRLB.  Clear any previous value then OR in the
      * new setting.
      */
-    NVMCTRL_REGS->NVMCTRL_CTRLA =
-        (NVMCTRL_REGS->NVMCTRL_CTRLA & (uint16_t)~NVMCTRL_CTRLA_RWS_Msk) |
-        (uint16_t)NVMCTRL_CTRLA_RWS(5);
+    NVMCTRL_REGS->NVMCTRL_CTRLA = (NVMCTRL_REGS->NVMCTRL_CTRLA & (uint16_t)~NVMCTRL_CTRLA_RWS_Msk) |
+                        (uint16_t)(NVMCTRL_CTRLA_RWS(5) | NVMCTRL_CTRLA_AUTOWS_Msk);
+
 
     /* Enable the instruction cache.  Without this the CPU would stall
      * on every flash access once the branch predictor runs out of
