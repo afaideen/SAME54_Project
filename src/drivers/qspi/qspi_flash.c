@@ -32,6 +32,7 @@ bool QSPI_Flash_Init(void)
     /* Harmony: QSPI_Initialize() */
     QSPI_HW_Init();
     QSPI_HW_Enable();
+//    QSPI_HW_Initialize();
 
     /* Harmony APP_STATE_RESET_FLASH */
     if (!SST26_Reset())

@@ -37,6 +37,7 @@ typedef enum
     QSPI_ADDRLEN_32BITS = 3,
 } qspi_addrlen_t;
 
+void QSPI_HW_Initialize(void);
 void QSPI_HW_PinInit(void);
 /* Initialize QSPI peripheral (clock masks + SWRST + basic MODE_MEMORY setup). */
 void QSPI_HW_Init(void);

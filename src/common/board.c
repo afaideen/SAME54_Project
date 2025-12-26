@@ -5,6 +5,7 @@
 #include "systick.h"
 #include "delay.h"
 #include "cpu.h"
+#include "../drivers/uart.h"
 #include "../drivers/uart_dma.h"
 #include "../drivers/rtcc.h"
 #include "../drivers/qspi/qspi_flash.h"
@@ -59,6 +60,7 @@ void board_init(void)
     SysTick_Init_1ms_Best(BOARD_CPU_CLOCK, true);
 
     /* Initialize the UART peripheral (SERCOM2) first, then DMA */    
+    UART2_Init();
     UART2_DMA_Init();
     #ifdef BOARD_ENABLE_RTCC
         RTCC_Init();

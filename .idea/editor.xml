@@ -341,8 +341,8 @@
     <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003Auart_005Fdma_002Eh_002Fl_003Adrivers_003Fuart_005Fdma_002Eh/@EntryIndexedValue" value="ExplicitlyExcluded" type="string" />
     <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003Acpu_002Ec_002Fl_003Acommon_003Fcpu_002Ec/@EntryIndexedValue" value="ExplicitlyExcluded" type="string" />
     <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003An25q256a_002Ec_002Fl_003Asrc_003Fdrivers_003Fqspi_003Fn25q256a_002Ec/@EntryIndexedValue" value="ExplicitlyExcluded" type="string" />
-    <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003An25q256a_002Ec_002Fl_003Asrc_003Fdrivers_003Fqspi_003Fn25q256a_002Ec/@EntryIndexRemoved" />
     <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003Aqspi_005Fflash_002Ec_002Fl_003Asrc_003Fdrivers_003Fqspi_003Fqspi_005Fflash_002Ec/@EntryIndexedValue" value="ExplicitlyExcluded" type="string" />
-    <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003Aqspi_005Fflash_002Ec_002Fl_003Asrc_003Fdrivers_003Fqspi_003Fqspi_005Fflash_002Ec/@EntryIndexRemoved" />
+    <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003Aqspi_005Fhw_002Ec_002Fl_003Asrc_003Fdrivers_003Fqspi_003Fqspi_005Fhw_002Ec/@EntryIndexedValue" value="ExplicitlyExcluded" type="string" />
+    <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003Aqspi_005Fhw_002Ec_002Fl_003Asrc_003Fdrivers_003Fqspi_003Fqspi_005Fhw_002Ec/@EntryIndexRemoved" />
   </component>
 </project>

@@ -13,6 +13,7 @@
 // Section: Configuration Bits
 // ****************************************************************************
 // ****************************************************************************
+
 #pragma config BOD33_DIS = SET
 #pragma config BOD33USERLEVEL = 0x1c
 #pragma config BOD33_ACTION = RESET
@@ -207,33 +208,45 @@ static void GCLK1_Initialize_bm(void)
  * operations together and ensures that the relevant buses are
  * temporarily unmasked while the NVM and CMCC registers are modified.
  */
+//static void FlashAndCache_Initialize_bm(void)
+//{
+//    /* Ensure NVMCTRL and CMCC are clocked while we adjust them.  Also
+//     * enable clocking to GCLK, OSCCTRL and OSC32KCTRL since some
+//     * downstream initializers may touch them.  These bits are ORed
+//     * because other code may set additional mask bits elsewhere.
+//     */
+//    MCLK_REGS->MCLK_AHBMASK  |= (MCLK_AHBMASK_NVMCTRL_Msk | MCLK_AHBMASK_CMCC_Msk);
+//    MCLK_REGS->MCLK_APBAMASK |= (MCLK_APBAMASK_GCLK_Msk |
+//                                 MCLK_APBAMASK_OSCCTRL_Msk |
+//                                 MCLK_APBAMASK_OSC32KCTRL_Msk);
+//
+//    /* Configure flash wait states.  The SAME54 requires five wait
+//     * states for correct operation at 120 MHz.  The RWS field lives
+//     * in CTRLA, not CTRLB.  Clear any previous value then OR in the
+//     * new setting.
+//     */
+//    NVMCTRL_REGS->NVMCTRL_CTRLA = (NVMCTRL_REGS->NVMCTRL_CTRLA & (uint16_t)~NVMCTRL_CTRLA_RWS_Msk) |
+//                        (uint16_t)(NVMCTRL_CTRLA_RWS(5) | NVMCTRL_CTRLA_AUTOWS_Msk);
+//
+//
+//    /* Enable the instruction cache.  Without this the CPU would stall
+//     * on every flash access once the branch predictor runs out of
+//     * entries.  The CMCC peripheral exposes a single control register
+//     * with a cache enable bit.
+//     */
+//    CMCC_REGS->CMCC_CTRL = CMCC_CTRL_CEN_Msk;
+//}
 static void FlashAndCache_Initialize_bm(void)
 {
-    /* Ensure NVMCTRL and CMCC are clocked while we adjust them.  Also
-     * enable clocking to GCLK, OSCCTRL and OSC32KCTRL since some
-     * downstream initializers may touch them.  These bits are ORed
-     * because other code may set additional mask bits elsewhere.
-     */
-    MCLK_REGS->MCLK_AHBMASK  |= (MCLK_AHBMASK_NVMCTRL_Msk | MCLK_AHBMASK_CMCC_Msk);
-    MCLK_REGS->MCLK_APBAMASK |= (MCLK_APBAMASK_GCLK_Msk |
-                                 MCLK_APBAMASK_OSCCTRL_Msk |
-                                 MCLK_APBAMASK_OSC32KCTRL_Msk);
+    /* Flash wait states config stays as-is */
 
-    /* Configure flash wait states.  The SAME54 requires five wait
-     * states for correct operation at 120 MHz.  The RWS field lives
-     * in CTRLA, not CTRLB.  Clear any previous value then OR in the
-     * new setting.
-     */
-    NVMCTRL_REGS->NVMCTRL_CTRLA = (NVMCTRL_REGS->NVMCTRL_CTRLA & (uint16_t)~NVMCTRL_CTRLA_RWS_Msk) |
-                        (uint16_t)(NVMCTRL_CTRLA_RWS(5) | NVMCTRL_CTRLA_AUTOWS_Msk);
+    /* --- Disable CMCC cache for QSPI correctness test (Harmony-like) --- */
+    CMCC_REGS->CMCC_CTRL &= ~CMCC_CTRL_CEN_Msk;
+    __DSB();
+    __ISB();
 
-
-    /* Enable the instruction cache.  Without this the CPU would stall
-     * on every flash access once the branch predictor runs out of
-     * entries.  The CMCC peripheral exposes a single control register
-     * with a cache enable bit.
-     */
-    CMCC_REGS->CMCC_CTRL = CMCC_CTRL_CEN_Msk;
+    /* Do NOT enable cache here for now */
+    // CMCC_REGS->CMCC_CTRL = CMCC_CTRL_CEN_Msk;
 }
 
 /**

@@ -50,7 +50,8 @@ int main(void)
     board_led0_on();
 
     /* Send initial messages over DMA */
-    UART2_DMA_Log(banner[0]);
+//    UART2_DMA_Log(banner[0]);
+    printf(banner[0]);
 
 //    RTCC_SetDateTime(&init_time);
     sst26_fulltest_result_t r = SST26_FullChip_Test(0x00000000UL, 8UL * 1024UL * 1024UL);
@@ -74,7 +75,7 @@ int main(void)
         if (DelayMsAsync(&t_led)) {
             t_led.cnt++;
             board_led0_toggle();
-            UART2_DMA_Log("LED0: %s\r\n", board_led0_is_on() ? "ON" : "OFF");
+//            UART2_DMA_Log("LED0: %s\r\n", board_led0_is_on() ? "ON" : "OFF");
         }
   
     }

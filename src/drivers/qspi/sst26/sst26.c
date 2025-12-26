@@ -5,8 +5,43 @@
 #include <string.h>
 #include "../../uart_dma.h"
 #include "sst26.h"
+#include "../../../common/systick.h"
 /* Internal driver state: quad mode enabled or not */
 static bool sst26_quad_enabled = false;
+
+static void sst26_debug_print_sr_200ms(uint8_t sr)
+{
+    static uint32_t last_ms = 0;
+    uint32_t now = millis();
+
+    if ((now - last_ms) >= 200U)
+    {
+        last_ms = now;
+        printf("[SST26] SR=0x%02X\r\n", (unsigned)sr);
+    }
+}
+
+
+static bool SST26_Wait_Ready_Ms(uint32_t timeout_ms, uint8_t *last_sr)
+{
+    uint32_t t0 = millis();
+    while ((millis() - t0) < timeout_ms)
+    {
+        uint8_t sr = 0;
+        if (!SST26_ReadStatus(&sr)){
+            if (last_sr) *last_sr = 0xEE;
+            return false;
+        }
+
+        if (last_sr) *last_sr = sr;
+            
+        /* print at most once every 200ms */
+        sst26_debug_print_sr_200ms(sr);
+        if ((sr & SST26_SR_WIP_Msk) == 0U)
+            return true;
+    }
+    return false;
+}
 
 static inline qspi_width_t sst26_cmd_width(void)
 {
@@ -136,11 +171,11 @@ bool SST26_HighSpeedRead(void *rx, uint32_t len, uint32_t address)
     if ((rx == NULL) || (len == 0U))
         return false;
 
-    /* 0x0B = 1-1-1 High Speed Read, 8 dummy cycles (1 dummy byte) */
+    /* Harmony: 0x0B, QUAD_CMD, dummy=6 */
     return QSPI_HW_MemoryRead_Simple(
         SST26_CMD_HIGH_SPEED_READ,
-        QSPI_WIDTH_SINGLE_BIT_SPI,
-        8U,
+        QSPI_WIDTH_QUAD_CMD,
+        6U,
         address,
         rx,
         (size_t)len
@@ -206,17 +241,20 @@ sst26_fulltest_result_t SST26_FullChip_Test(uint32_t base_addr, uint32_t size_by
                 (unsigned long)pct,
                 (unsigned long)sector_addr);
         }
-
+        printf("[SST26] Erase sector @0x%06lX\r\n", (unsigned long)sector_addr);
         /* 1) Erase sector */
         if (!SST26_SectorErase(sector_addr))
         {
             printf("[SST26] Erase CMD FAIL @0x%06lX\r\n", (unsigned long)sector_addr);
             return SST26_FT_ERR_ERASE_CMD;
         }
+        printf("[SST26] Erase CMD OK, waiting WIP clear...\r\n");
 
-        if (!SST26_WaitWhileBusy(SST26_FT_SECTOR_ERASE_LOOPS))
+        uint8_t sr_last = 0;
+        if (!SST26_Wait_Ready_Ms(3000U, &sr_last))
         {
-            printf("[SST26] Erase TIMEOUT @0x%06lX\r\n", (unsigned long)sector_addr);
+            printf("[SST26] Erase TIMEOUT @0x%06lX SR=0x%02X\r\n",
+           (unsigned long)sector_addr, (unsigned)sr_last);
             return SST26_FT_ERR_TIMEOUT;
         }
 
@@ -254,7 +292,8 @@ sst26_fulltest_result_t SST26_FullChip_Test(uint32_t base_addr, uint32_t size_by
                 return SST26_FT_ERR_PROG_CMD;
             }
 
-            if (!SST26_WaitWhileBusy(SST26_FT_PAGE_PROG_LOOPS))
+            uint8_t sr_last = 0;
+            if (!SST26_Wait_Ready_Ms(50U, &sr_last))
             {
                 printf("[SST26] Program TIMEOUT @0x%06lX\r\n", (unsigned long)addr);
                 return SST26_FT_ERR_TIMEOUT;

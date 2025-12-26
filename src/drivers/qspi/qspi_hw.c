@@ -10,6 +10,19 @@
 #include "qspi_hw.h"
 //#include "../../common/board.h"
 
+static inline bool qspi_wait_instrend_clear(void)
+{
+    uint32_t guard = 2000000UL;
+    while (((QSPI_REGS->QSPI_INTFLAG & QSPI_INTFLAG_INSTREND_Msk) == 0U) && (guard-- != 0U)) { }
+    if (guard == 0U)
+        return false;
+
+    /* Harmony clears AFTER observe */
+    QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
+    return true;
+}
+
+
 /* AHB aperture base (device-pack symbol) */
 static volatile uint8_t * const QSPI_MEM8 = (volatile uint8_t *)QSPI_ADDR;
 
@@ -33,30 +46,25 @@ static inline void qspi_begin_transfer_common(void)
 
 static inline void QSPI_HW_SyncInstr(void)
 {
-    /* Readback sync point as used by Harmony (forces APB write completion) */
     (void)QSPI_REGS->QSPI_INSTRFRAME;
-    __DSB();
-    __ISB();
 }
 
 /* End-of-transfer + wait complete (Harmony style) */
 static inline bool qspi_end_transfer_wait(void)
 {
-    /* Clear stale completion */
-    QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
-
-    /* Don’t overwrite CTRLA; just request end-of-transfer */
+    /* End transfer */
     QSPI_REGS->QSPI_CTRLA = QSPI_CTRLA_ENABLE_Msk | QSPI_CTRLA_LASTXFER_Msk;
-
 
     uint32_t guard = 2000000UL;
     while (((QSPI_REGS->QSPI_INTFLAG & QSPI_INTFLAG_INSTREND_Msk) == 0U) && (guard-- != 0U)) { }
     if (guard == 0U) return false;
 
-    /* Clear completion (Harmony always clears after wait) */
+    /* Clear AFTER observe */
     QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
     return true;
 }
+
+
 
 /* Small memcpy helpers (Harmony-like word then byte tail copy) */
 static inline void qspi_memcpy_32bit(volatile uint32_t *dst, const uint32_t *src, size_t words)
@@ -185,11 +193,13 @@ bool QSPI_HW_Command(uint8_t opcode, qspi_width_t width)
 
     QSPI_REGS->QSPI_INSTRFRAME =
         QSPI_INSTRFRAME_WIDTH((uint32_t)width) |
-        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READ_Val) |
-        QSPI_INSTRFRAME_INSTREN_Msk;
+        QSPI_INSTRFRAME_INSTREN_Msk |
+        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READ_Val);
 
-    QSPI_HW_SyncInstr();
-    return qspi_end_transfer_wait();
+    /* Harmony sync point is readback only */
+    (void)QSPI_REGS->QSPI_INSTRFRAME;
+
+    return qspi_wait_instrend_clear();
 }
 
 bool QSPI_HW_Read(uint8_t opcode, qspi_width_t width, void *rx, size_t rx_len)
@@ -259,21 +269,21 @@ bool QSPI_HW_CommandAddr(uint8_t opcode,
                          qspi_addrlen_t addrlen,
                          uint32_t address)
 {
-    /* Clear stale completion before starting a new instruction */
-    QSPI_REGS->QSPI_INTFLAG = QSPI_INTFLAG_INSTREND_Msk;
+    qspi_begin_transfer_common(); // important: enable + clear stale INSTREND
 
     QSPI_REGS->QSPI_INSTRADDR = QSPI_INSTRADDR_ADDR(address);
     QSPI_REGS->QSPI_INSTRCTRL = QSPI_INSTRCTRL_INSTR(opcode);
 
     QSPI_REGS->QSPI_INSTRFRAME =
         QSPI_INSTRFRAME_WIDTH((uint32_t)width) |
-        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READ_Val) |
         QSPI_INSTRFRAME_INSTREN_Msk |
         QSPI_INSTRFRAME_ADDREN_Msk |
-        QSPI_INSTRFRAME_ADDRLEN((uint32_t)addrlen);
+        QSPI_INSTRFRAME_ADDRLEN((uint32_t)addrlen) |
+        QSPI_INSTRFRAME_TFRTYPE(QSPI_INSTRFRAME_TFRTYPE_READ_Val);
 
-    QSPI_HW_SyncInstr();
-    return qspi_end_transfer_wait();
+    (void)QSPI_REGS->QSPI_INSTRFRAME;
+
+    return qspi_wait_instrend_clear();
 }
 
 bool QSPI_HW_ReadEx(uint8_t opcode,
