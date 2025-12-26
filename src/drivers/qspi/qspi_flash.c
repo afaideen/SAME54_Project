@@ -1,15 +1,19 @@
 
 #include <stdio.h>
+#include <string.h>
+#include "../../common/board.h"
 #include "qspi_flash.h"
 #include "qspi_hw.h"
-
-
 
 #if APP_USE_SST26_FLASH
 #include "sst26/sst26.h"
 #elif APP_USE_N25Q_FLASH
 #include "n25q/n25q256a.h"
 #endif
+
+uint8_t g_qspi_jedec_id[3];
+bool    g_qspi_jedec_valid;
+
 /*
  * QSPI flash init sequence (SAME54 Xplained Pro + N25Q256A):
  *  1) Init QSPI peripheral (AHB clocks + reset + basic CTRLB/BAUD)
@@ -56,16 +60,20 @@ bool QSPI_Flash_Init(void)
         printf("[QSPI] SST26_ReadJEDEC failed\r\n");
         return false;
     }
+    g_qspi_jedec_id[0] = (uint8_t)((jedec >> 0)  & 0xFF);   // 0xBF
+    g_qspi_jedec_id[1] = (uint8_t)((jedec >> 8)  & 0xFF);   // 0x26
+    g_qspi_jedec_id[2] = (uint8_t)((jedec >> 16) & 0xFF);   // 0x43
 
     printf("QSPI: JEDEC ID = 0x%06lX\r\n", (unsigned long)(jedec & 0x00FFFFFFUL));
 
     if (jedec != SST26VF064B_JEDEC_ID)
     {
+		g_qspi_jedec_valid = false;
         printf("QSPI: JEDEC mismatch. expected=0x%06lX\r\n",
                (unsigned long)(SST26VF064B_JEDEC_ID & 0x00FFFFFFUL));
         return false;
     }
-
+	g_qspi_jedec_valid = true;
   
 
     return true;
@@ -115,117 +123,36 @@ void QSPI_Flash_Diag_Print(void)
     printf("QSPI Peripheral : %s\r\n",
         (QSPI_REGS->QSPI_STATUS & QSPI_STATUS_ENABLE_Msk) ? "ENABLED" : "DISABLED");
 
+
+    /* JEDEC read is SPI 4-4-4 by definition */
     printf("QSPI Mode       : %s\r\n",
-        (QSPI_REGS->QSPI_CTRLB & QSPI_CTRLB_MODE_MEMORY) ? "MEMORY (XIP)" : "SPI/REG");
+        (QSPI_REGS->QSPI_CTRLB & QSPI_CTRLB_MODE_MEMORY) ? "MEMORY" : "SPI/REG");
 
     /* ---- QSPI BAUD decode (field is at bit[15:8]) ---- */
+	uint32_t f_qspi = (uint32_t)CPU_CLOCK_HZ;
     uint32_t baud_field = (QSPI_REGS->QSPI_BAUD & QSPI_BAUD_BAUD_Msk) >> QSPI_BAUD_BAUD_Pos;
-
-    /*
-     * QSPI SCK formula is device-defined; on SAM D5x/E5x it is commonly:
-     *   f_sck ~= f_qspi / (2 * (BAUD + 1))
-     *
-     * We don't have a direct "QSPI clock source" reader here, so we assume QSPI is
-     * sourced from the same high-speed clock domain as the CPU (your log shows 120 MHz).
-     */
-#ifdef CPU_CLOCK_HZ
-    uint32_t f_qspi = (uint32_t)CPU_CLOCK_HZ;
-#else
-    uint32_t f_qspi = 120000000UL;
-#endif
-    uint32_t f_sck = f_qspi / (2UL * (baud_field + 1UL));
-
+	uint32_t f_sck = f_qspi / (2UL * (baud_field + 1UL));
     printf("QSPI BAUD       : BAUD=%lu  (~%lu.%03lu MHz)\r\n",
         baud_field,
         f_sck / 1000000UL,
         (f_sck % 1000000UL) / 1000UL);
-
-    /* ---- Current instruction frame (what the MCU is set up to do) ---- */
-    uint32_t instr = QSPI_REGS->QSPI_INSTRCTRL;
+	uint32_t instr = QSPI_REGS->QSPI_INSTRCTRL;
+	uint8_t opcode  = (uint8_t)((instr & QSPI_INSTRCTRL_INSTR_Msk) >> QSPI_INSTRCTRL_INSTR_Pos);
     uint32_t frame = QSPI_REGS->QSPI_INSTRFRAME;
-
-    uint8_t opcode  = (uint8_t)((instr & QSPI_INSTRCTRL_INSTR_Msk) >> QSPI_INSTRCTRL_INSTR_Pos);
-    uint8_t optcode = (uint8_t)((instr & QSPI_INSTRCTRL_OPTCODE_Msk) >> QSPI_INSTRCTRL_OPTCODE_Pos);
-
-    uint32_t width  = (frame & QSPI_INSTRFRAME_WIDTH_Msk) >> QSPI_INSTRFRAME_WIDTH_Pos;
-    uint32_t tfr    = (frame & QSPI_INSTRFRAME_TFRTYPE_Msk) >> QSPI_INSTRFRAME_TFRTYPE_Pos;
-    uint32_t addrlen= (frame & QSPI_INSTRFRAME_ADDRLEN_Msk) >> QSPI_INSTRFRAME_ADDRLEN_Pos;
-    uint32_t dummy  = (frame & QSPI_INSTRFRAME_DUMMYLEN_Msk) >> QSPI_INSTRFRAME_DUMMYLEN_Pos;
-    uint32_t optlen = (frame & QSPI_INSTRFRAME_OPTCODELEN_Msk) >> QSPI_INSTRFRAME_OPTCODELEN_Pos;
-
-    printf("Mem Opcode      : 0x%02X\r\n", opcode);
+	uint32_t width  = (frame & QSPI_INSTRFRAME_WIDTH_Msk) >> QSPI_INSTRFRAME_WIDTH_Pos;
+	printf("Mem Opcode      : 0x%02X\r\n", opcode);
     printf("Mem Width       : %s\r\n", qspi_width_str(width));
-    printf("Mem TfrType     : %s\r\n", qspi_tfrtype_str(tfr));
-    printf("Mem AddrLen     : %s\r\n", (addrlen == 3U) ? "32-bit" : "24-bit/other");
-    printf("Mem OptCode     : 0x%02X (len=%lu)\r\n", optcode, optlen);
-    printf("Mem Dummy       : %lu\r\n", dummy);
 
-    /* ---- JEDEC ID ---- */
-    /* Always perform a direct 0x9F read in register mode to determine manufacturer. */
-    uint8_t id[3] = {0};
-    uint8_t mfr = 0xFFU;
-    if (QSPI_HW_Read(0x9FU, QSPI_WIDTH_SINGLE_BIT_SPI, &id[0], sizeof(id)))
-    {
-        mfr  = id[0];
-        uint8_t type = id[1];
-        uint8_t cap  = id[2];
-        printf("JEDEC ID        : 0x%02X %02X %02X\r\n", mfr, type, cap);
+    /* Print previously captured JEDEC */
+    printf("JEDEC ID (SPI 0x9F): 0x%02X %02X %02X\r\n",
+          g_qspi_jedec_id[0],
+          g_qspi_jedec_id[1],
+          g_qspi_jedec_id[2]);
 
-        if (mfr == 0x20U)
-            printf("Flash Detected  : Micron (N25Q family)\r\n");
-        else if (mfr == 0xBFU)
-            printf("Flash Detected  : SST/Microchip (SST26)\r\n");
-        else if (mfr == 0xFFU || mfr == 0x00U)
-            printf("Flash Detected  : INVALID (check wiring/CS/clock)\r\n");
-        else
-            printf("Flash Detected  : Unknown MFR\r\n");
-    }
-    else
-    {
-        printf("JEDEC ID        : READ FAILED\r\n");
-    }
+    printf("Flash Detected  : %s\r\n",
+          g_qspi_jedec_valid ? "VALID" : "INVALID");
 
-    /* ---- Status register ---- */
-    /* ---- Status register ---- */
-#if APP_USE_N25Q_FLASH
-    if (mfr == 0x20U)
-    {
-        uint8_t sr = N25Q_ReadStatus();
-        printf("SR              : 0x%02X\r\n", sr);
-        printf("Flash Ready     : %s\r\n",
-               (sr & N25Q_SR_WIP_Msk) ? "NO (WIP=1)" : "YES");
-        printf("Write Enable    : %s\r\n",
-               (sr & N25Q_SR_WEL_Msk) ? "YES (WEL=1)" : "NO (WEL=0)");
-
-        /* ... NVCR/VCR/EVCR ... */
-        return;
-    }
-#endif
-
-#if APP_USE_SST26_FLASH
-    if (mfr == 0xBFU)
-    {
-        uint8_t sr = 0U;
-        if (SST26_ReadStatus(&sr))
-        {
-            printf("SR              : 0x%02X\r\n", sr);
-            printf("Flash Ready     : %s\r\n",
-                   (sr & SST26_SR_WIP_Msk) ? "NO (WIP=1)" : "YES");
-        }
-        else
-        {
-            printf("SR              : READ FAILED\r\n");
-            printf("Flash Ready     : UNKNOWN\r\n");
-        }
-        return;
-    }
-#endif
-
-    /* If we get here, either flash is unknown or that driver is not compiled in */
-    printf("SR              : UNKNOWN\r\n");
-    printf("Flash Ready     : UNKNOWN\r\n");
-
-
-    printf("===============================================\r\n");
+    printf("=================================================\r\n");
 }
+
 
