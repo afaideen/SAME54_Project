@@ -19,6 +19,7 @@
 #include "common/systick.h"
 #include "drivers/uart_dma.h"
 #include "drivers/rtcc.h"
+#include "drivers/qspi/sst26/sst26.h"
 #include "common/cpu.h"
 
 /* Use the DMA UART driver for non-blocking logging. The queue and ISR
@@ -51,7 +52,9 @@ int main(void)
     /* Send initial messages over DMA */
     UART2_DMA_Log(banner[0]);
 
-//    RTCC_SetDateTime(&init_time);   
+//    RTCC_SetDateTime(&init_time);
+    sst26_fulltest_result_t r = SST26_FullChip_Test(0x00000000UL, 8UL * 1024UL * 1024UL);
+    printf("\r\nFullChipTest result=%d\r\n", (int)r);
 
     while (1) {
         static delay_t t_led = {0,500,0};

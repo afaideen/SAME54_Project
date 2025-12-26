@@ -114,8 +114,35 @@ static const char *qspi_tfrtype_str(uint32_t tfr)
     }
 }
 
+static const char *qspi_io_mode_str(uint32_t width)
+{
+    /* WIDTH encoding (your existing qspi_width_str shows):
+       0: 1-1-1  -> SINGLE
+       1: 1-1-2  -> DUAL
+       2: 1-1-4  -> QUAD
+       3: 1-2-2  -> DUAL
+       4: 1-4-4  -> QUAD
+       5: 2-2-2  -> DUAL
+       6: 4-4-4  -> QUAD
+     */
+    switch (width) {
+        case 0: return "SINGLE";
+        case 1: case 3: case 5: return "DUAL";
+        case 2: case 4: case 6: return "QUAD";
+        default: return "UNKNOWN";
+    }
+}
+
 void QSPI_Flash_Diag_Print(void)
 {
+    uint32_t f_qspi = (uint32_t)CPU_CLOCK_HZ;
+    uint32_t baud_field = (QSPI_REGS->QSPI_BAUD & QSPI_BAUD_BAUD_Msk) >> QSPI_BAUD_BAUD_Pos;
+	uint32_t f_sck = f_qspi / (2UL * (baud_field + 1UL));
+    uint32_t instr = QSPI_REGS->QSPI_INSTRCTRL;
+	uint8_t opcode  = (uint8_t)((instr & QSPI_INSTRCTRL_INSTR_Msk) >> QSPI_INSTRCTRL_INSTR_Pos);
+    uint32_t frame = QSPI_REGS->QSPI_INSTRFRAME;
+	uint32_t width  = (frame & QSPI_INSTRFRAME_WIDTH_Msk) >> QSPI_INSTRFRAME_WIDTH_Pos;
+    
     printf("\r\n");
     printf("=============== QSPI DIAGNOSTIC ===============\r\n");
 
@@ -127,24 +154,20 @@ void QSPI_Flash_Diag_Print(void)
     /* JEDEC read is SPI 4-4-4 by definition */
     printf("QSPI Mode       : %s\r\n",
         (QSPI_REGS->QSPI_CTRLB & QSPI_CTRLB_MODE_MEMORY) ? "MEMORY" : "SPI/REG");
+    printf("QSPI I/O Mode   : %s\r\n", qspi_io_mode_str(width));
 
     /* ---- QSPI BAUD decode (field is at bit[15:8]) ---- */
-	uint32_t f_qspi = (uint32_t)CPU_CLOCK_HZ;
-    uint32_t baud_field = (QSPI_REGS->QSPI_BAUD & QSPI_BAUD_BAUD_Msk) >> QSPI_BAUD_BAUD_Pos;
-	uint32_t f_sck = f_qspi / (2UL * (baud_field + 1UL));
+	
     printf("QSPI BAUD       : BAUD=%lu  (~%lu.%03lu MHz)\r\n",
         baud_field,
         f_sck / 1000000UL,
         (f_sck % 1000000UL) / 1000UL);
-	uint32_t instr = QSPI_REGS->QSPI_INSTRCTRL;
-	uint8_t opcode  = (uint8_t)((instr & QSPI_INSTRCTRL_INSTR_Msk) >> QSPI_INSTRCTRL_INSTR_Pos);
-    uint32_t frame = QSPI_REGS->QSPI_INSTRFRAME;
-	uint32_t width  = (frame & QSPI_INSTRFRAME_WIDTH_Msk) >> QSPI_INSTRFRAME_WIDTH_Pos;
+	
 	printf("Mem Opcode      : 0x%02X\r\n", opcode);
     printf("Mem Width       : %s\r\n", qspi_width_str(width));
 
     /* Print previously captured JEDEC */
-    printf("JEDEC ID (SPI 0x9F): 0x%02X %02X %02X\r\n",
+    printf("JEDEC ID        : 0x%02X %02X %02X\r\n",
           g_qspi_jedec_id[0],
           g_qspi_jedec_id[1],
           g_qspi_jedec_id[2]);

@@ -4,25 +4,36 @@ SAME54_Project/
 │  └─ nbproject/
 │     ├─ configurations.xml
 │     └─ project.xml
-├─ src/
-│  ├─ main.c
-│  ├─ common/
-│  │  ├─ board.c
-│  │  ├─ board.h
-│  │  ├─ cpu.c
-│  │  ├─ cpu.h
-│  │  ├─ delay.c
-│  │  ├─ delay.h
-│  │  ├─ systick.c
-│  │  └─ systick.h
-│  └─ drivers/
-│     ├─ rtcc.c
-│     ├─ rtcc.h
-│     ├─ uart.c
-│     ├─ uart.h
-│     ├─ uart_dma.c
-│     └─ uart_dma.h
-└─ package.log
+└─ src/
+├─ main.c
+├─ common/
+│  ├─ board.c
+│  ├─ board.h
+│  ├─ cpu.c
+│  ├─ cpu.h
+│  ├─ delay.c
+│  ├─ delay.h
+│  ├─ systick.c
+│  └─ systick.h
+└─ drivers/
+    ├─ rtcc.c
+    ├─ rtcc.h
+    ├─ uart.c
+    ├─ uart.h
+    ├─ uart_dma.c
+    ├─ uart_dma.h
+    └─ qspi/
+        ├─ qspi_flash.c
+        ├─ qspi_flash.h
+        ├─ qspi_hw.c
+        ├─ qspi_hw.h
+        ├─ n25q/
+        │  ├─ n25q256a.c
+        │  └─ n25q256a.h
+        └─ sst26/
+            ├─ sst26.c
+            └─ sst26.h
+
 
 ## Here’s the flow map diagram (Mermaid) for the full execution timeline from reset through runtime, including SysTick and DMAC involvement.
 

@@ -38,6 +38,33 @@
 /* Device ID used by Harmony demo */
 #define SST26VF064B_JEDEC_ID             (0x004326BFUL)
 
+#define LOG(...)                 (void)UART2_DMA_Log(__VA_ARGS__)
+
+#define SST26_SECTOR_SIZE        (4096U)
+#define SST26_PAGE_SIZE          (256U)
+/* Busy polling loop budgets (tuned to be conservative).
+   These are LOOP counts (not ms), matching SST26_WaitWhileBusy(). */
+#define SST26_FT_READY_LOOPS           (2000000UL)
+#define SST26_FT_PAGE_PROG_LOOPS       (3000000UL)
+#define SST26_FT_SECTOR_ERASE_LOOPS    (30000000UL)
+
+
+typedef enum
+{
+    SST26_FT_OK = 0,
+    SST26_FT_ERR_ALIGN,
+    SST26_FT_ERR_RESET,
+    SST26_FT_ERR_QUAD,
+    SST26_FT_ERR_UNLOCK,
+    SST26_FT_ERR_STATUS,
+    SST26_FT_ERR_TIMEOUT,
+    SST26_FT_ERR_ERASE_CMD,
+    SST26_FT_ERR_ERASE_VERIFY,
+    SST26_FT_ERR_PROG_CMD,
+    SST26_FT_ERR_READBACK,
+    SST26_FT_ERR_VERIFY,
+} sst26_fulltest_result_t;
+
 /* API (mirrors Harmony behavior but keeps your naming style) */
 bool SST26_Reset(void);
 bool SST26_EnableQuadIO(void);
@@ -52,6 +79,7 @@ bool SST26_WaitWhileBusy(uint32_t timeout_loops);
 bool SST26_SectorErase(uint32_t address);
 bool SST26_PageProgram(const void *tx, uint32_t len, uint32_t address);
 bool SST26_HighSpeedRead(void *rx, uint32_t len, uint32_t address);
+sst26_fulltest_result_t SST26_FullChip_Test(uint32_t base_addr, uint32_t size_bytes);
 
 #endif /* SST26_H */
 
