@@ -21,5 +21,7 @@
  */
 void SystemConfigPerformance(void);
 void CPU_LogClockOverview(void);
+void CPU_PrintCacheMpuBootLine(void);
+
 
 #endif //CPU_H

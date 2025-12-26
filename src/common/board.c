@@ -76,9 +76,10 @@ void board_init(void)
         
     #endif    
     CPU_LogClockOverview();
-    printf("[QSPI] After Reset+Quad+Unlock\r\n");
+//    printf("[QSPI] After Reset+Quad+Unlock\r\n");
     QSPI_Flash_Diag_Print();
     FW_LogBanner();  
+    CPU_PrintCacheMpuBootLine();
 }
 
 /**

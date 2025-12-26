@@ -36,7 +36,7 @@ static bool SST26_Wait_Ready_Ms(uint32_t timeout_ms, uint8_t *last_sr)
         if (last_sr) *last_sr = sr;
             
         /* print at most once every 200ms */
-        sst26_debug_print_sr_200ms(sr);
+//        sst26_debug_print_sr_200ms(sr);
         if ((sr & SST26_SR_WIP_Msk) == 0U)
             return true;
     }
@@ -241,14 +241,14 @@ sst26_fulltest_result_t SST26_FullChip_Test(uint32_t base_addr, uint32_t size_by
                 (unsigned long)pct,
                 (unsigned long)sector_addr);
         }
-        printf("[SST26] Erase sector @0x%06lX\r\n", (unsigned long)sector_addr);
+//        printf("[SST26] Erase sector @0x%06lX\r\n", (unsigned long)sector_addr);
         /* 1) Erase sector */
         if (!SST26_SectorErase(sector_addr))
         {
             printf("[SST26] Erase CMD FAIL @0x%06lX\r\n", (unsigned long)sector_addr);
             return SST26_FT_ERR_ERASE_CMD;
         }
-        printf("[SST26] Erase CMD OK, waiting WIP clear...\r\n");
+//        printf("[SST26] Erase CMD OK, waiting WIP clear...\r\n");
 
         uint8_t sr_last = 0;
         if (!SST26_Wait_Ready_Ms(3000U, &sr_last))

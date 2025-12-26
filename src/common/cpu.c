@@ -35,6 +35,32 @@
 #error "Header mismatch: expected SAME54 DFP with *_REGS pointers"
 #endif
 
+typedef struct
+{
+    uint8_t  cmcc_enabled;
+    uint8_t  mpu_qspi_nc_enabled;
+    uint32_t qspi_base;
+    uint32_t qspi_region_bytes;
+} cpu_boot_memstate_t;
+
+/* Build switches */
+#ifndef CPU_ENABLE_CMCC_CACHE
+#define CPU_ENABLE_CMCC_CACHE      0
+#endif
+
+#ifndef CPU_ENABLE_QSPI_MPU_NC
+#define CPU_ENABLE_QSPI_MPU_NC     1
+#endif
+
+#ifndef QSPI_MPU_REGION_LOG2
+#define QSPI_MPU_REGION_LOG2       24U   /* 16MB region */
+//#define QSPI_MPU_REGION_LOG2        23U     /* 8MB region */
+#endif
+
+static cpu_boot_memstate_t g_cpu_memstate;
+static uint8_t  g_cmcc_on;
+static uint8_t  g_qspi_mpu_nc_on;
+
 static inline void RTCC_ForceOffAtBoot(void)
 {
     // Optional but recommended: stop IRQ side effects
@@ -238,16 +264,73 @@ static void GCLK1_Initialize_bm(void)
 //}
 static void FlashAndCache_Initialize_bm(void)
 {
-    /* Flash wait states config stays as-is */
+    /* Make sure NVMCTRL + CMCC clocks are available while we touch them */
+    MCLK_REGS->MCLK_AHBMASK  |= (MCLK_AHBMASK_NVMCTRL_Msk | MCLK_AHBMASK_CMCC_Msk);
 
-    /* --- Disable CMCC cache for QSPI correctness test (Harmony-like) --- */
+    /* Flash wait states: 120 MHz needs RWS=5 (your old code was correct) */
+    NVMCTRL_REGS->NVMCTRL_CTRLA =
+        (uint16_t)((NVMCTRL_REGS->NVMCTRL_CTRLA & (uint16_t)~NVMCTRL_CTRLA_RWS_Msk) |
+                   (uint16_t)(NVMCTRL_CTRLA_RWS(5) | NVMCTRL_CTRLA_AUTOWS_Msk));
+
+#if CPU_ENABLE_CMCC_CACHE
+    CMCC_REGS->CMCC_CTRL |= CMCC_CTRL_CEN_Msk;
+#else
     CMCC_REGS->CMCC_CTRL &= ~CMCC_CTRL_CEN_Msk;
+#endif
+    __DSB();
+    __ISB();
+    /* Record actual cache state for boot log */
+    g_cpu_memstate.cmcc_enabled =
+        ((CMCC_REGS->CMCC_CTRL & CMCC_CTRL_CEN_Msk) != 0U) ? 1U : 0U;
+}
+
+
+
+static void MPU_QSPI_AHB_NonCacheable_bm(void)
+{
+#if CPU_ENABLE_QSPI_MPU_NC
+    const uint32_t base = (uint32_t)QSPI_ADDR;
+    const uint32_t log2 = (uint32_t)QSPI_MPU_REGION_LOG2;
+
+    /* Align base to region size */
+    const uint32_t aligned = base & ~((1UL << log2) - 1UL);
+    const uint32_t rasr_size = (log2 - 1UL) << MPU_RASR_SIZE_Pos;
+
+    __DMB();
+    MPU->CTRL = 0U;
+    MPU->RNR  = 7U;
+
+    MPU->RBAR = aligned | MPU_RBAR_VALID_Msk | 7U;
+
+    /* Device memory (non-cacheable): TEX=0,C=0,B=1, S=1, XN=1 */
+    MPU->RASR =
+        MPU_RASR_ENABLE_Msk |
+        MPU_RASR_XN_Msk |
+        (3UL << MPU_RASR_AP_Pos) |
+        rasr_size |
+        (0UL << MPU_RASR_TEX_Pos) |
+        (0UL << MPU_RASR_C_Pos) |
+        (1UL << MPU_RASR_B_Pos) |
+        (1UL << MPU_RASR_S_Pos);
+
+    MPU->CTRL = MPU_CTRL_ENABLE_Msk | MPU_CTRL_PRIVDEFENA_Msk;
     __DSB();
     __ISB();
 
-    /* Do NOT enable cache here for now */
-    // CMCC_REGS->CMCC_CTRL = CMCC_CTRL_CEN_Msk;
+    g_qspi_mpu_nc_on = 1U;
+        g_cpu_memstate.mpu_qspi_nc_enabled = 1U;
+    g_cpu_memstate.qspi_base          = (uint32_t)QSPI_ADDR;
+    g_cpu_memstate.qspi_region_bytes  = (1UL << QSPI_MPU_REGION_LOG2);
+
+#else
+    g_qspi_mpu_nc_on = 0U;
+        g_cpu_memstate.mpu_qspi_nc_enabled = 0U;
+    g_cpu_memstate.qspi_base          = (uint32_t)QSPI_ADDR;
+    g_cpu_memstate.qspi_region_bytes  = (1UL << QSPI_MPU_REGION_LOG2);
+
+#endif
 }
+
 
 /**
  * @brief Enable peripheral generic clock channels.
@@ -295,6 +378,16 @@ static void MCLK_Masks_Initialize_bm(void)
     MCLK_REGS->MCLK_AHBMASK  = 0x00FFFFFFu;
     MCLK_REGS->MCLK_APBAMASK = 0x000007FFu;
     MCLK_REGS->MCLK_APBBMASK = 0x00018656u;
+
+    /* Preserve required AHB clocks */
+    MCLK_REGS->MCLK_AHBMASK |= (MCLK_AHBMASK_NVMCTRL_Msk | MCLK_AHBMASK_CMCC_Msk | MCLK_AHBMASK_QSPI_Msk);
+}
+static void CMCC_Enable_bm(void)
+{
+    MCLK_REGS->MCLK_AHBMASK |= MCLK_AHBMASK_CMCC_Msk;  // ensure clocked
+    CMCC_REGS->CMCC_CTRL |= CMCC_CTRL_CEN_Msk;
+    __DSB();
+    __ISB();
 }
 
 /**
@@ -341,6 +434,9 @@ void SystemConfigPerformance(void)
 
     /* A) Performance configuration: flash wait states and cache enable. */
     FlashAndCache_Initialize_bm();
+    /* NEW: prevent CMCC from caching QSPI AHB window */
+    MPU_QSPI_AHB_NonCacheable_bm();
+//    CMCC_Enable_bm();
 
     /* B) Clock tree initialization.  These functions configure the
      *    oscillator and generic clock generators exactly once.  They
@@ -369,8 +465,6 @@ void SystemConfigPerformance(void)
      */
     RTCC_ForceOffAtBoot();
 }
-
-
 
 void CPU_LogClockOverview(void)
 {
@@ -459,6 +553,19 @@ if (gclk2_src == 6)  /* DFLL48M */
     printf("RTCC           : %s\r\n",
            rtcc_enabled ? "ENABLED" : "DISABLED");
     printf("===============================================\r\n\r\n");
+}
+
+
+void CPU_PrintCacheMpuBootLine(void)
+{
+    g_cmcc_on = (CMCC_REGS->CMCC_CTRL & CMCC_CTRL_CEN_Msk) ? 1U : 0U;
+//    g_cmcc_on = g_cpu_memstate.cmcc_enabled;
+
+    printf("[SYS] CMCC=%s, QSPI_MPU_NC=%s, QSPI_AHB=0x%08lX, REGION=%luMB\r\n",
+           g_cmcc_on ? "ON" : "OFF",
+           g_qspi_mpu_nc_on ? "ON" : "OFF",
+           (unsigned long)QSPI_ADDR,
+           (unsigned long)((1UL << QSPI_MPU_REGION_LOG2) / (1024UL * 1024UL)));
 }
 
 
