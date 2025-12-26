@@ -54,8 +54,19 @@ int main(void)
     printf(banner[0]);
 
 //    RTCC_SetDateTime(&init_time);
-    sst26_fulltest_result_t r = SST26_FullChip_Test(0x00000000UL, 8UL * 1024UL * 1024UL);
-    printf("\r\nFullChipTest result=%d\r\n", (int)r);
+//    sst26_fulltest_result_t r = SST26_FullChip_Test(0x00000000UL, 8UL * 1024UL * 1024UL);
+//    printf("\r\nFullChipTest result=%d\r\n", (int)r);
+
+
+//    printf("[SST26] CHIP ERASE (DESTRUCTIVE)\r\n");
+//    if (!SST26_ChipErase(0))   // 0 = use default timeout macro
+//    {
+//        printf("[SST26] Chip erase FAILED\r\n");
+//    }
+//    else
+//    {
+//        printf("[SST26] Chip erase OK\r\n");
+//    }
 
     while (1) {
         static delay_t t_led = {0,500,0};

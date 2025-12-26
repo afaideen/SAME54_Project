@@ -135,6 +135,52 @@ bool SST26_WaitWhileBusy(uint32_t timeout_loops)
     }
     return false;
 }
+bool SST26_ChipErase(uint32_t timeout_ms)
+{
+    /* Harmony APP_Erase() behavior for chip erase:
+     *  - WREN (sent in QUAD_CMD in the demo)
+     *  - CHIP ERASE opcode
+     *  - poll SR.WIP until clear
+     */
+    if (timeout_ms == 0U)
+    {
+        timeout_ms = (uint32_t)SST26_CHIP_ERASE_TIMEOUT_MS;
+    }
+
+    if (!SST26_WriteEnable())
+    {
+        return false;
+    }
+
+    /* Use current command width (quad if SST26_EnableQuadIO() was called). */
+    if (!QSPI_HW_Command(SST26_CMD_CHIP_ERASE, sst26_cmd_width()))
+    {
+        return false;
+    }
+
+    uint32_t t0 = millis();
+    uint8_t sr = 0;
+    uint8_t sr_last = 0;
+
+    while ((millis() - t0) < timeout_ms)
+    {
+        if (!SST26_ReadStatus(&sr))
+        {
+            return false;
+        }
+
+        sr_last = sr;
+        sst26_debug_print_sr_200ms(sr);
+
+        if ((sr & SST26_SR_WIP_Msk) == 0U)
+        {
+            return true;
+        }
+    }
+
+    printf("[SST26] Chip Erase TIMEOUT SR=0x%02X\r\n", (unsigned)sr_last);
+    return false;
+}
 
 bool SST26_SectorErase(uint32_t address)
 {

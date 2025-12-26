@@ -66,6 +66,13 @@ typedef enum
 } sst26_fulltest_result_t;
 
 /* API (mirrors Harmony behavior but keeps your naming style) */
+/* Chip erase can take a long time (seconds to minutes depending on conditions).
+ * Keep this generous; callers can use a smaller value if desired. */
+#ifndef SST26_CHIP_ERASE_TIMEOUT_MS
+#define SST26_CHIP_ERASE_TIMEOUT_MS    (120000UL)   // 120s default
+#endif
+
+bool SST26_ChipErase(uint32_t timeout_ms);
 bool SST26_Reset(void);
 bool SST26_EnableQuadIO(void);
 bool SST26_WriteEnable(void);
