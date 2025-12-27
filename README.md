@@ -1,54 +1,98 @@
 # SAME54_Project — Bare-Metal Firmware (ATSAME54P20A, SAME54 Xplained Pro)
 
+## 1. Overview
 Bare-metal firmware for the **Microchip ATSAME54P20A** on the **SAME54 Xplained Pro** board, built in **MPLAB X** with **XC32 (pic32c)** headers (`sam.h`) and direct `*_REGS` register access.
 
-This project is a **bring-up + validation harness** that proves:
-- deterministic **120 MHz** clocking (XOSC0 → DPLL0 → GCLK0/MCLK)
-- **SysTick 1ms** timing + **DWT CYCCNT** profiling
-- **RTCC** date/time
-- **UART logging over SERCOM2** (EDBG VCOM) with **DMA TX**
-- **QSPI external flash** bring-up (**SST26**) in **memory-mapped QUAD** mode, including **erase / write / read** of a config object with integrity checks.
+This repo is a **bring-up + validation demo** that exercises the following on real hardware:
 
----
-## Board Profile Overview (SAME54 Xplained Pro)
+- **Clock and performance bring-up**  
+  XOSC0 12 MHz → DPLL0 → **CPU 120 MHz**, flash wait states configured, MPU policy applied, and (optionally) cache handling logged.
 
-This firmware targets the **Microchip SAME54 Xplained Pro** (ATSAME54P20A) and uses the board’s default on-board wiring for debug and user I/O. The project assumes the **EDBG** debugger is present and provides both programming/debug and a virtual COM port (VCOM).
+- **Timing and profiling**  
+  **SysTick 1 ms** tick + **DWT CYCCNT** enabled for fine timing measurements.
 
-### Power / Debug
-- **EDBG USB** provides programming/debug via SWD and exposes a **VCOM UART**.
-- **SWD pins:** PA30 (SWCLK), PA31 (SWDIO)
-- **SWO trace:** PB30 (optional high-speed debug output)
+- **Concurrent LED blinking using non-blocking delay**  
+  The runtime loop keeps LED0 blinking while other work (logging, button handling, and optional QSPI activity) continues, using a **non-blocking DelayMsAsync** style timer.
 
-### User I/O (hardwired on-board)
-- **LED0:** **PC18**, **active-low**
-  - `LED0_On()` drives low, `LED0_Off()` drives high
-- **SW0 button:** **PB31**, **active-low**
-  - Internal pull-up enabled (OUT=1 with PULLEN=1)
+- **RTCC wall clock**  
+  RTCC enabled and used to prepend wall-clock timestamps to logs.
 
-### UART Console (EDBG VCOM)
-- **SERCOM2 UART** routed to EDBG Virtual COM:
-  - **RX:** PB24
-  - **TX:** PB25
-- Default terminal settings: **115200, 8N1**
-- Project uses **DMA-backed TX logging** for non-blocking prints.
+- **UART console on EDBG VCOM**  
+  **SERCOM2** (PB24 RX, PB25 TX) with **DMA TX logging** for non-blocking prints.
 
-### External QSPI Flash (on-board NOR)
-- Board includes an external **QSPI NOR flash** connected to the SAME54 QSPI peripheral.
-- QSPI signal wiring:
-  - **PA08–PA11:** QSPI IO0–IO3
-  - **PB10:** QSCK
-  - **PB11:** QCS
-- Firmware supports **memory-mapped QUAD mode** and prints JEDEC ID + diagnostic info at boot.
+- **QSPI external flash demonstration**  
+  External QSPI NOR flash is initialized in **memory-mapped QUAD mode** and validated by:
+  - QSPI SCK configured for **high-speed operation (~30 MHz)** (see QSPI diagnostic at boot)
+  1) JEDEC ID read + diagnostic print
+  2) **SST26 driver path** used for erase/write/read demo
+  3) writing a small config object and reading it back with integrity checks
 
-### Crystals / Clock sources
-- **Main crystal (XOSC0):** 12 MHz (PB22/XIN1, PB23/XOUT1)
-- **32 kHz crystal (XOSC32K):** 32.768 kHz (PA00/XIN32, PA01/XOUT32) used for RTCC/low-power domain
-
-> Reference: SAME54 Xplained Pro cheat sheet and wiring notes.
+- **SW0 button interaction**  
+  **SW0 (PB31)** is used in the runtime loop to **toggle the LED blink rate interchangeably** (slow ↔ fast) as part of the demo.
 
 ---
 
-## What you should see (sample log)
+## 2. Table of Contents
+- 1. Overview
+- 3. Board Profile Overview
+  - 3.1 Power and Debug
+  - 3.2 User IO
+  - 3.3 UART Console
+  - 3.4 External QSPI Flash
+  - 3.5 Crystals and Clock Sources
+- 4. What You Should See
+- 5. Toolchain and Packs
+- 6. Project Structure
+- 7. Build and Run
+- 8. Firmware Flow
+- 9. Configuration Switches
+- 10. Notes on Cache and MPU
+- 11. Firmware Code Flow Diagram
+- 12. License
+- 13. Credits
+
+---
+
+## 3. Board Profile Overview (SAME54 Xplained Pro)
+This firmware targets the **Microchip SAME54 Xplained Pro** (ATSAME54P20A) and uses the board’s default on-board wiring for debug and user IO. The project assumes the **EDBG** debugger is present and provides both programming debug and a virtual COM port.
+
+### 3.1 Power and Debug
+- EDBG USB provides programming debug via SWD and exposes a VCOM UART
+- SWD pins are PA30 SWCLK and PA31 SWDIO
+- SWO trace is PB30 optional high speed debug output
+
+### 3.2 User IO
+- LED0 is PC18 active low
+  - LED0_On drives low and LED0_Off drives high
+- SW0 button is PB31 active low
+  - Internal pull up enabled
+
+### 3.3 UART Console (EDBG VCOM)
+- SERCOM2 UART routed to EDBG Virtual COM
+  - RX is PB24
+  - TX is PB25
+- Default terminal settings are 115200 8N1
+- DMA backed TX logging used for non blocking prints
+
+### 3.4 External QSPI Flash (on board NOR)
+- External QSPI NOR flash connected to SAME54 QSPI peripheral
+- QSPI wiring
+  - PA08 to PA11 are QSPI IO0 to IO3
+  - PB10 is QSCK
+  - PB11 is QCS
+- Firmware supports memory mapped QUAD mode and prints JEDEC and diagnostic info at boot
+- QSPI clocking is configured for **high-speed SCK (~30 MHz)** (example BAUD=1 shown in boot diagnostics)
+- Demo uses **SST26** driver path for erase and config object write read validation
+- QSPI AHB base used by this project is 0x04000000 and mapped region is 16MB
+
+### 3.5 Crystals and Clock Sources
+- Main crystal XOSC0 is 12 MHz on PB22 XIN1 and PB23 XOUT1
+- 32 kHz crystal XOSC32K is 32.768 kHz on PA00 XIN32 and PA01 XOUT32 used for RTCC low power domain
+
+---
+
+## 4. What You Should See (Sample Log)
+The QSPI diagnostic includes the configured QSPI SCK rate, typically **around 30 MHz** in this demo build.
 
 ```
 QSPI: JEDEC ID = 0x4326BF
@@ -78,140 +122,93 @@ Flash Detected  : VALID
 =================================================
 
 [SYS] CMCC=OFF, QSPI_MPU_NC=ON, QSPI_AHB=0x04000000, REGION=16MB
-
-[SST26] ChipErase PASS in 39 ms (0.04 s)
-[QSPI_FLASH] Write QSPI PASS in 19 ms addr=0x00008000 len=16
-[QSPI_FLASH] Read  QSPI PASS in 0 ms  addr=0x00008000 len=16
-
-[2025-12-27 08:51:26][727][0.000]LED0: OFF
-[2025-12-27 08:51:27][1227][499.999]LED0: ON
 ```
 
 ---
 
-## Toolchain / Packs (tested baseline)
-
+## 5. Toolchain and Packs (Tested Baseline)
 This project was created in **MPLAB X v5.40** and validated with:
+- XC32 v4.50 pic32c
+- SAME54_DFP v3.5.87
+- CMSIS v5.8.0
 
-- **XC32 v4.50** (pic32c)
-- **SAME54_DFP v3.5.87**
-- **CMSIS v5.8.0**
-
-> Tip: When opening the project in newer MPLAB X versions, avoid auto-upgrading packs unless you intend to update register symbols across the codebase.
-
----
-
-## Hardware Profile (SAME54 Xplained Pro)
-
-**User IO**
-- **LED0:** PC18 (active-low)
-- **SW0:**  PB31 (active-low, internal pull-up enabled)
-
-**EDBG Virtual COM Port (SERCOM2)**
-- **RX:** PB24
-- **TX:** PB25
-
-**SWO**
-- **SWO:** PB30
-
-**QSPI External Flash**
-- Board default: Micron N25Q256A (varies by board rev)
-- This firmware log shows **SST26** driver path in use.
-- QSPI AHB base used by this project: **0x0400_0000**
-- Region mapped: **16 MB**
+Tip: When opening in newer MPLAB X, avoid auto upgrading packs unless you intend to update register symbols across the codebase.
 
 ---
 
-## Project Structure
-
+## 6. Project Structure
 ```
 SAME54_Project/
-├─ SAME54_Project.X/              # MPLAB X project
+├─ SAME54_Project.X/
 └─ src/
-   ├─ main.c                      # bring-up harness loop (LED + periodic logs)
+   ├─ main.c
    ├─ common/
-   │  ├─ board.c / board.h         # board init (GPIO + feature bring-up)
-   │  ├─ cpu.c / cpu.h             # clocks/cache/boot diagnostics helpers
-   │  ├─ systick.c / systick.h     # SysTick 1ms timebase
-   │  └─ delay.c / delay.h         # non-blocking delay helpers (wrap-safe)
+   │  ├─ board.c / board.h
+   │  ├─ cpu.c / cpu.h
+   │  ├─ systick.c / systick.h
+   │  └─ delay.c / delay.h
    └─ drivers/
-      ├─ uart.c / uart.h           # SERCOM2 base UART
-      ├─ uart_dma.c / uart_dma.h   # DMA-backed UART TX logging
-      ├─ rtcc.c / rtcc.h           # RTCC init + time helpers
+      ├─ uart.c / uart.h
+      ├─ uart_dma.c / uart_dma.h
+      ├─ rtcc.c / rtcc.h
       └─ qspi/
-         ├─ qspi_hw.c / qspi_hw.h  # QSPI peripheral + pinmux + low-level ops
-         ├─ qspi_flash.c / .h      # flash abstraction + object read/write
-         ├─ n25q/                  # Micron N25Q support
-         └─ sst26/                 # SST26 support
+         ├─ qspi_hw.c / qspi_hw.h
+         ├─ qspi_flash.c / qspi_flash.h
+         ├─ n25q/
+         └─ sst26/
 ```
 
 ---
 
-## Build & Run
-
-1. Open `SAME54_Project.X` in **MPLAB X**.
-2. Select compiler: **XC32 v4.50**.
-3. Build & program using the on-board **EDBG**.
-4. Open a serial terminal:
-  - **115200 baud**
-  - **8N1**
-5. Observe:
-  - clock overview
-  - QSPI diagnostic + JEDEC ID
-  - RTCC time
-  - QSPI erase/write/read tests
-  - periodic LED log messages
+## 7. Build and Run
+1. Open SAME54_Project.X in MPLAB X
+2. Select compiler XC32 v4.50
+3. Build and program using EDBG
+4. Open serial terminal at 115200 8N1
+5. Observe clock overview, QSPI diagnostic, RTCC time, QSPI tests, and periodic LED logs
+6. Press **SW0** to toggle blink rate between slow and fast
 
 ---
 
-## Firmware Flow (high level)
+## 8. Firmware Flow (High Level)
+8.1 SystemConfigPerformance
+- flash wait states
+- cache and MPU policy including QSPI region attributes
+- XOSC0 and DPLL0 to 120 MHz
+- GCLK0 and MCLK setup
 
-1. **SystemConfigPerformance()**
-  - flash wait states
-  - cache / MPU policy (including QSPI region attributes)
-  - XOSC0 + DPLL0 to 120 MHz
-  - GCLK0 + MCLK setup
+8.2 board_init
+- LED and SW pin config
+- SysTick 1ms
+- UART2 and DMA logging
+- RTCC init if enabled
+- QSPI init and JEDEC detection if enabled
+- diagnostic printouts
 
-2. **board_init()**
-  - LED/SW pin config
-  - SysTick 1ms
-  - UART2 + DMA logging
-  - RTCC init (if enabled)
-  - QSPI init + JEDEC detection (if enabled)
-  - diagnostic printouts
+8.3 main loop
+- SW0 press toggles blink rate
+- LED0 toggles and logs are scheduled using a **non-blocking delay timer** (no busy-wait loops)
+---
 
-3. **main loop**
-  - non-blocking periodic toggle/log of LED0
-  - optional demo tasks can be added without blocking timing
+## 9. Configuration Switches (Feature Gating)
+Features enabled via compile time defines:
+- BOARD_ENABLE_RTCC enables RTCC init and time prints
+- USE_QSPI_FLASH enables QSPI init flash diagnostics and tests
 
 ---
 
-## Configuration Switches (feature gating)
-
-Features are enabled via compile-time defines (see `board.h` / project settings):
-
-- `BOARD_ENABLE_RTCC` — enable RTCC init + time prints
-- `USE_QSPI_FLASH`    — enable QSPI init + flash diagnostics/tests
-
-> Keep core bring-up stable first (clocks/SysTick/UART), then enable RTCC/QSPI.
-
----
-
-## Notes on Cache / MPU
-
+## 10. Notes on Cache and MPU
 The project prints a runtime policy line such as:
-
 ```
 [SYS] CMCC=OFF, QSPI_MPU_NC=ON, QSPI_AHB=0x04000000, REGION=16MB
 ```
-
 Meaning:
-- CMCC cache currently OFF (can be enabled if desired)
-- QSPI memory region is forced **Non-Cacheable** via MPU to avoid coherency issues
-  during memory-mapped reads/writes.
+- CMCC cache currently OFF
+- QSPI memory region forced non cacheable via MPU to avoid coherency issues during memory mapped reads and writes
 
 ---
-## SAME54 Project firmware code flow
+
+## 11. Firmware Code Flow Diagram
 ```mermaid
 flowchart TD
   A[Reset] --> B[SystemConfigPerformance\nFlash wait states\nCache and MPU policy\nClock setup to 120MHz]
@@ -239,24 +236,21 @@ flowchart TD
   F --> H[Main loop]
 
   H --> S{SW0 pressed}
-  S -- Yes --> T[Toggle blink rate\n500ms to 100ms or 100ms to 500ms]
+  S -- Yes --> T[Toggle blink rate\nslow to fast or fast to slow]
   S -- No --> I
 
   T --> I{Delay elapsed}
   I -- No --> H
   I -- Yes --> J[Toggle LED0\nLog timestamp and delta]
   J --> H
-
 ```
 ---
 
-## License
-
-Add your license here (MIT/BSD/Proprietary).
+## 12. License
+Copyright (c) 2025. All rights reserved
 
 ---
 
-## Credits
-
-Board: Microchip **SAME54 Xplained Pro**  
-DFP/headers: Microchip SAME54 DFP (`sam.h`)
+## 13. Credits
+Board Microchip SAME54 Xplained Pro  
+DFP headers Microchip SAME54 DFP sam.h
