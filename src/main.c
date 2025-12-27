@@ -46,7 +46,6 @@ int main(void)
 //    UART2_DMA_Log(banner[0]);
     printf(banner[0]);
 
-//    SST26_Example_Erase();
     QSPI_FLASH_Example_WriteRead();
 
 

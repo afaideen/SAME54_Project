@@ -217,60 +217,73 @@ bool QSPI_Flash_ReadAddr(uint32_t address,
                          qspi_obj_hdr_t *hdr_out,
                          bool verify_crc)
 {
+#if QSPI_FLASH_TIMELOG
+    uint32_t t_start_ms = millis();
+#endif
+    bool ok = false;
+    uint32_t len_hint = obj_max_len;   // will update to payload_len if header validated
+
     if ((obj_out == NULL) || (obj_max_len == 0U))
-        return false;
+        goto out;
 
     // 1) Read header
     qspi_obj_hdr_t hdr;
     if (!flash_read_chunked(address, &hdr, (uint32_t)sizeof(hdr)))
-        return false;
+        goto out;
 
-    // 2) Detect "empty / erased" region quickly (common in flash)
-    //    If sector is erased, bytes are 0xFF, so magic will be 0xFFFFFFFF.
+    // 2) Empty / erased region
     if (hdr.magic == 0xFFFFFFFFUL)
-        return false;
+        goto out;
 
-    // 3) Validate header basics
+    // 3) Header basics
     if (hdr.magic != QSPI_OBJ_MAGIC)
-        return false;
+        goto out;
 
     if (hdr.header_len != (uint16_t)sizeof(qspi_obj_hdr_t))
-        return false;
+        goto out;
 
     if (hdr.payload_len == 0U)
-        return false;
+        goto out;
 
     if (hdr.payload_len > obj_max_len)
-        return false;  // caller buffer too small
+        goto out;
 
-    // 4) Validate header CRC (treat header_crc as 0 when computing)
+    len_hint = hdr.payload_len; // now we know the real payload size
+
+    // 4) Header CRC verify
     uint32_t saved_hcrc = hdr.header_crc;
     hdr.header_crc = 0U;
     uint32_t calc_hcrc = crc32_ieee(&hdr, sizeof(hdr));
     hdr.header_crc = saved_hcrc;
 
     if (calc_hcrc != saved_hcrc)
-        return false;
+        goto out;
 
     // 5) Read payload
     uint32_t payload_addr = address + (uint32_t)sizeof(qspi_obj_hdr_t);
     if (!flash_read_chunked(payload_addr, obj_out, hdr.payload_len))
-        return false;
+        goto out;
 
-    // 6) Optional payload CRC verify
+    // 6) Optional payload CRC
     if (verify_crc)
     {
         uint32_t calc_pcrc = crc32_ieee(obj_out, hdr.payload_len);
         if (calc_pcrc != hdr.payload_crc)
-            return false;
+            goto out;
     }
 
-    // 7) Return header to caller if requested
     if (hdr_out != NULL)
         *hdr_out = hdr;
 
-    return true;
+    ok = true;
+
+out:
+#if QSPI_FLASH_TIMELOG
+    qspi_timelog_print("Read", ok, t_start_ms, address, len_hint);
+#endif
+    return ok;
 }
+
 
 bool QSPI_Flash_ReadSector(int sector,
                            void *obj_out, uint32_t obj_max_len,
@@ -508,6 +521,10 @@ void QSPI_FLASH_Example_WriteRead(void)
 {
     #define QSPI_CFG_FLASH_ADDR   (8U * 4096U)   // sector 8
     bool ok;
+    
+    if(!SST26_ChipErase(0)){
+        printf("[SST26] Chip erase FAILED\r\n");
+    }
     
     // Initialize data cfg
     cfg.device_id    = 0xE54A1234;
