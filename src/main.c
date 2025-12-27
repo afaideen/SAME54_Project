@@ -20,29 +20,22 @@
 #include "drivers/uart_dma.h"
 #include "drivers/rtcc.h"
 #include "drivers/qspi/sst26/sst26.h"
+#include "drivers/qspi/qspi_flash.h"
 #include "common/cpu.h"
 
-/* Use the DMA UART driver for non-blocking logging. The queue and ISR
+
+int main(void)
+{ 
+    /* Use the DMA UART driver for non-blocking logging. The queue and ISR
  * handling live inside drivers/uart_dma.c. Call `UART2_DMA_Log(...)` to
  * enqueue messages and `UART2_DMA_Log_Dropped()` to query drop stats.
  */
-char banner[][100] = {
-        "\r\n",
-        "Hello from printf over SERCOM2 (DMA)!\r\n",
-      	"System booted at %lu Hz\r\n",
-    };
-/* Set initial date/time: 2025-12-23 15:30:00 */
-rtcc_datetime_t init_time =
-{
-    .year  = 2025,
-    .month = 12,
-    .day   = 23,
-    .hour  = 16,
-    .min   = 0,
-    .sec   = 0
-};
-int main(void)
-{    
+    char banner[][100] = {
+            "\r\n",
+            "Hello from printf over SERCOM2 (DMA)!\r\n",
+            "System booted at %lu Hz\r\n",
+        };
+
     SystemConfigPerformance();
     board_init();
     
@@ -53,20 +46,9 @@ int main(void)
 //    UART2_DMA_Log(banner[0]);
     printf(banner[0]);
 
-//    RTCC_SetDateTime(&init_time);
-//    sst26_fulltest_result_t r = SST26_FullChip_Test(0x00000000UL, 8UL * 1024UL * 1024UL);
-//    printf("\r\nFullChipTest result=%d\r\n", (int)r);
+//    SST26_Example_Erase();
+    QSPI_FLASH_Example_WriteRead();
 
-
-//    printf("[SST26] CHIP ERASE (DESTRUCTIVE)\r\n");
-//    if (!SST26_ChipErase(0))   // 0 = use default timeout macro
-//    {
-//        printf("[SST26] Chip erase FAILED\r\n");
-//    }
-//    else
-//    {
-//        printf("[SST26] Chip erase OK\r\n");
-//    }
 
     while (1) {
         static delay_t t_led = {0,500,0};
@@ -86,10 +68,11 @@ int main(void)
         if (DelayMsAsync(&t_led)) {
             t_led.cnt++;
             board_led0_toggle();
-//            UART2_DMA_Log("LED0: %s\r\n", board_led0_is_on() ? "ON" : "OFF");
+            UART2_DMA_Log("LED0: %s\r\n", board_led0_is_on() ? "ON" : "OFF");
         }
   
     }
 
     return (EXIT_FAILURE);
 }
+

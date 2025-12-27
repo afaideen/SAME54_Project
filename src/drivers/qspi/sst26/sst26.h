@@ -87,6 +87,10 @@ bool SST26_SectorErase(uint32_t address);
 bool SST26_PageProgram(const void *tx, uint32_t len, uint32_t address);
 bool SST26_HighSpeedRead(void *rx, uint32_t len, uint32_t address);
 sst26_fulltest_result_t SST26_FullChip_Test(uint32_t base_addr, uint32_t size_bytes);
+void SST26_ChipErase_Prove(void);
+void SST26_Test_WriteRead_HelloWorld(void);
+void SST26_Test_ChipErase_Timing(void);
+void SST26_Example_Erase(void);
 
 #endif /* SST26_H */
 

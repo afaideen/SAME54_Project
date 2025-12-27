@@ -338,6 +338,21 @@ bool RTCC_FormatDateTime(char *out, uint32_t out_sz)
     return true;
 }
 
+void RTCC_Example_SetDateTime(void)
+{
+    /* Set initial date/time: 2025-12-23 15:30:00 */
+    static rtcc_datetime_t init_time =
+    {
+        .year  = 2025,
+        .month = 12,
+        .day   = 23,
+        .hour  = 16,
+        .min   = 0,
+        .sec   = 0
+    };
+    RTCC_SetDateTime(&init_time);
+}
+
 
 
 
