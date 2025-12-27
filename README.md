@@ -102,6 +102,7 @@ CPU Clock      : 120.000 MHz
 CPU Source     : DPLL0
 DPLL0 Output   : 120.000 MHz
 DPLL0 Ref      : 1.000 MHz (GCLK2 = DFLL48M / 48)
+DPLL0 Ratio    : LDR=119, LDRFRAC=0
 GCLK0 Divider  : 1
 CPU Divider    : 1
 GCLK1 (Periph) : 120.000 MHz (DIV=1)
@@ -109,6 +110,7 @@ SysTick        : 1.000 ms tick
 DWT CYCCNT     : ENABLED
 RTCC           : ENABLED
 ===============================================
+
 
 =============== QSPI DIAGNOSTIC ===============
 QSPI Peripheral : ENABLED
@@ -121,7 +123,43 @@ JEDEC ID        : 0xBF 26 43
 Flash Detected  : VALID
 =================================================
 
+================ FIRMWARE INFO ================
+Name           : SAME54_BareMetal
+Version        : v1.0.0
+Build Date     : Dec 27 2025
+Build Time     : 12:18:01
+RTC Time       : 2025-12-27 08:51:26
+Boot Time      : 104 ms since reset
+===============================================
+
 [SYS] CMCC=OFF, QSPI_MPU_NC=ON, QSPI_AHB=0x04000000, REGION=16MB
+
+[SST26] ChipErase PASS in 39 ms (0.04 s)
+[QSPI][WRITE] device_cfg:
+  device_id   = 0xE54A1234
+  boot_count  = 17
+  calib_off   = 102
+  calib_gain  = 4096
+  flags       = 0x01
+[QSPI_FLASH] Write QSPI PASS in 19 ms (0.02 s) addr=0x00008000 len=16
+[QSPI_Flash] Config write OK
+[QSPI_FLASH] Read QSPI PASS in 0 ms (0.00 s) addr=0x00008000 len=16
+[QSPI] Config read OK: type=1 ver=1 len=16
+device_id=0xE54A1234 boot=17 flags=0x01
+[QSPI][READ] device_cfg:
+  device_id   = 0xE54A1234
+  boot_count  = 17
+  calib_off   = 102
+  calib_gain  = 4096
+  flags       = 0x01
+[2025-12-27 08:51:26][727][0.000]LED0: OFF
+[2025-12-27 08:51:27][1227][499.999]LED0: ON
+[2025-12-27 08:51:27][1727][499.999]LED0: OFF
+[2025-12-27 08:51:28][2227][499.999]LED0: ON
+[2025-12-27 08:51:28][2727][500.001]LED0: OFF
+
+
+
 ```
 
 ---
