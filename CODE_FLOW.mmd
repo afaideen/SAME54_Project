@@ -1,0 +1,30 @@
+flowchart TD
+  A[Reset entry] --> B[SystemConfigPerformance]
+  B --> C[Clock tree ready]
+  C --> D[Flash wait states set]
+  D --> E[CMCC cache configured]
+  E --> EA[MPU QSPI non cacheable]
+  EA --> F[BOARD Init]
+  F --> G[SysTick Init]
+  G --> H[DWT Init optional]
+  H --> I[UART2 DMA Init]
+  I --> J[QSPI Init]
+  J --> K{QSPI detected}
+  K -->|yes| L[Log JEDEC id]
+  K -->|no| M[Error pattern blink]
+  L --> N[Enter main loop]
+
+  N --> O[Run LED task]
+  N --> P[Run button task]
+  N --> Q[Run logger task]
+  N --> R[Run QSPI task optional]
+
+  P --> S{SW0 press event}
+  S -->|yes| T[Toggle blink period]
+  S -->|no| N
+
+  Q --> U{DMA idle}
+  U -->|yes| V[Start DMA tx]
+  U -->|no| W[Drop or queue log]
+  V --> N
+  W --> N
