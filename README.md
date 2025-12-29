@@ -1,5 +1,5 @@
 # SAME54_Project — Bare-Metal Firmware (ATSAME54P20A, SAME54 Xplained Pro)
-
+``
 ## 1. Overview
 Bare-metal firmware for the **Microchip ATSAME54P20A** on the **SAME54 Xplained Pro** board, built in **MPLAB X** with **XC32 (pic32c)** headers (`sam.h`) and direct `*_REGS` register access.
 
@@ -285,7 +285,7 @@ flowchart TD
 ---
 
 ## 12. License
-Copyright (c) 2025. All rights reserved
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ---
 

@@ -6,12 +6,9 @@
             <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/main.c</file>
             <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/drivers/qspi/sst26/sst26.c</file>
             <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/drivers/qspi/qspi_hw.c</file>
+            <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/drivers/qspi/qspi_flash.h</file>
             <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/drivers/qspi/qspi_flash.c</file>
-            <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/drivers/qspi/qspi_hw.h</file>
-            <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/common/cpu.c</file>
             <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/drivers/qspi/sst26/sst26.h</file>
-            <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/common/cpu.h</file>
-            <file>file:/D:/MPLABXProjects/SAM%20E54%20Xplained%20Pro/SAME54_Project/src/common/board.c</file>
         </group>
     </open-files>
 </project-private>
